@@ -21,3 +21,6 @@ Direktlinks (z. B. für WordPress oder E-Mail): `https://raw.githubusercontent.c
 Hausfarben: Grün #477c6e (Hover #385f55), Text #2b2b2b / #333333, Creme #f5f1ea, Schrift Nunito.
 
 Die E-Mail-Signatur nutzt eine kleinere Kopie unter `signatur/logo.png`.
+
+## Webseite
+Seit 06.11.2026 ist `nordend-spieleverleih_schwarz-transparent.png` das Website-Logo (WordPress-Mediathek ID 1806, Einstellung `site_logo`). Das alte Logo (ID 29, Schriften berühren sich) liegt noch in der Mediathek; zurück: Design > Customizer > Website-Informationen oder site_logo wieder auf 29 setzen.
