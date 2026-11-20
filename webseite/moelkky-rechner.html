@@ -14,12 +14,39 @@
   padding:8px 0 24px;
 }
 .moelkky-rechner *{box-sizing:border-box;}
-.moelkky-rechner .mr-wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+.moelkky-rechner .mr-wrap{max-width:1080px;margin:0 auto;padding:0 16px;}
 .moelkky-rechner .mr-back{display:inline-block;margin-bottom:14px;font-weight:700;color:var(--green);text-decoration:none;}
 .moelkky-rechner .mr-back:hover{color:var(--green-dark);}
-.moelkky-rechner .mr-header{text-align:center;margin-bottom:18px;}
-.moelkky-rechner .mr-header h1{font-size:clamp(1.5rem,3.5vw,2.1rem);margin:0 0 6px;color:var(--green-dark);font-weight:800;}
-.moelkky-rechner .mr-header p{margin:0;color:#6b6b6b;font-size:0.95rem;}
+.moelkky-rechner .mr-header{text-align:center;margin-bottom:22px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.moelkky-rechner .mr-header img{width:84px;height:84px;object-fit:cover;border-radius:50%;box-shadow:0 6px 16px rgba(0,0,0,.18);border:3px solid #fff;}
+.moelkky-rechner .mr-header h1{font-size:clamp(1.5rem,3.5vw,2.1rem);margin:0 0 4px;color:var(--green-dark);font-weight:800;}
+.moelkky-rechner .mr-header p{margin:0;color:#6b6b6b;font-size:0.95rem;max-width:34em;}
+.moelkky-rechner .mr-grid{display:grid;grid-template-columns:minmax(0,560px) minmax(260px,420px);gap:28px;align-items:start;justify-content:center;}
+.moelkky-rechner .mr-col-right .card{position:sticky;top:20px;}
+.moelkky-rechner .mr-info-gal{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.moelkky-rechner .mr-info-gal .row{display:flex;gap:8px;}
+.moelkky-rechner .mr-info-gal .row>div{flex:1;min-width:0;border-radius:12px;overflow:hidden;aspect-ratio:1.3/1;}
+.moelkky-rechner .mr-info-gal img,.moelkky-rechner .mr-info-gal video{width:100%;height:100%;object-fit:cover;display:block;}
+.moelkky-rechner .mr-eyebrow{display:inline-block;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem;color:var(--green);margin-bottom:.4em;}
+.moelkky-rechner .mr-info h2{font-size:1.4rem;margin:0 0 .2em;color:var(--ink);font-weight:800;}
+.moelkky-rechner .mr-info .mr-tag{font-size:1rem;color:var(--green-dark);font-weight:700;margin-bottom:.6em;}
+.moelkky-rechner .mr-info h3{font-size:0.95rem;margin:.9em 0 .2em;color:var(--ink);font-weight:800;}
+.moelkky-rechner .mr-info p{color:#5d5d5d;margin:0 0 .6em;font-size:0.95rem;}
+.moelkky-rechner .mr-facts{list-style:none;padding:0;margin:.8em 0 0;display:flex;flex-wrap:wrap;gap:8px;}
+.moelkky-rechner .mr-facts li{background:var(--chip);border-radius:10px;padding:6px 12px;font-size:.85rem;}
+.moelkky-rechner .mr-facts b{color:var(--green);margin-right:6px;}
+.moelkky-rechner .mr-cta{text-align:center;background:var(--green);color:#fff;border-radius:16px;padding:28px 20px;margin-top:22px;}
+.moelkky-rechner .mr-cta h2{color:#fff;font-size:1.3rem;margin:0 0 6px;}
+.moelkky-rechner .mr-cta p{color:#fff;opacity:.92;margin:0 0 14px;}
+.moelkky-rechner .mr-cta .row{justify-content:center;margin-bottom:0;}
+.moelkky-rechner .btn-white{background:#fff;color:var(--green)!important;}
+.moelkky-rechner .btn-white:hover{background:var(--cream);}
+.moelkky-rechner .btn-outline-white{background:transparent;color:#fff!important;border:2px solid #fff;}
+.moelkky-rechner .btn-outline-white:hover{background:#fff;color:var(--green)!important;}
+@media(max-width:860px){
+  .moelkky-rechner .mr-grid{grid-template-columns:1fr;max-width:560px;margin:0 auto;}
+  .moelkky-rechner .mr-col-right .card{position:static;}
+}
 .moelkky-rechner .card{
   background:#fff;
   border-radius:var(--radius);
@@ -117,9 +144,13 @@
 <div class="mr-wrap">
   <a class="mr-back" href="/spieleauswahl/#mölkky">&larr; Zurück zur Spieleauswahl</a>
   <div class="mr-header">
-    <h1>🎯 Mölkky-Punkterechner</h1>
+    <img src="https://nordend-spieleverleih.de/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-28-at-14.22.13.jpeg" alt="Mölkky vom Nordend-Spieleverleih">
+    <h1>Mölkky-Punkterechner</h1>
     <p>Dein digitaler Punktezähler für Mölkky &mdash; direkt hier auf der Seite, auch offline nutzbar.</p>
   </div>
+
+  <div class="mr-grid">
+  <div class="mr-col-left">
 
   <!-- SETUP -->
   <div class="card" id="setupCard">
@@ -195,10 +226,45 @@
   </div>
 
   <div class="footer-note">Eigener Nachbau der Spielregeln vom Nordend-Spieleverleih &mdash; unabhängig entwickelt, keine offizielle Mölkky-App.</div>
-</div>
-</div>
 
-<section class="cta" style="margin-top:8px;"><div class="w"><h2>Lust auf das echte Spiel?</h2><p>Wir bringen Mölkky und 11 weitere Spiele direkt zu dir &ndash; abholen oder liefern lassen.</p><div class="btns" style="justify-content:center"><a class="btn" href="/jetzt-buchen/">Jetzt buchen</a><a class="btn ghost" href="/spieleauswahl/">Alle Spiele ansehen</a></div></div></section>
+  </div>
+  <div class="mr-col-right">
+    <div class="card mr-info">
+      <div class="mr-info-gal">
+        <div class="row">
+          <div><img src="https://nordend-spieleverleih.de/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-28-at-14.22.13.jpeg" alt="Mölkky mieten in Frankfurt – Nordend-Spieleverleih" loading="lazy"></div>
+          <div><img src="https://nordend-spieleverleih.de/wp-content/uploads/2026/09/WhatsApp-Image-2026-09-28-at-14.22.27-1.jpeg" alt="Mölkky Detailbild" loading="lazy"></div>
+        </div>
+        <div class="row">
+          <div><video src="https://nordend-spieleverleih.de/wp-content/uploads/2026/11/nsv-moelkky.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Mölkky im Einsatz (Video)"></video></div>
+        </div>
+      </div>
+      <span class="mr-eyebrow">Spiel Nr. 04</span>
+      <h2>Mölkky</h2>
+      <p class="mr-tag">Das finnische Geschicklichkeitsspiel mit Suchtfaktor</p>
+      <h3>So funktioniert's</h3>
+      <p>Ihr werft mit einem Holzstab auf nummerierte Holzkegel. Fällt nur ein Kegel, bekommt ihr die Punkte, die darauf stehen. Fallen mehrere, zählt die Anzahl der Kegel. Wer exakt 50 Punkte erreicht, gewinnt. Aber Achtung: Wer über die 50 hinausschießt, fällt zurück auf 25!</p>
+      <h3>Details &amp; Zubehör</h3>
+      <p>12 Kegel und 1 Stab, verpackt in Holzkiste</p>
+      <ul class="mr-facts"><li><b>Spieler</b>Ab 2 (ideal für große Gruppen)</li><li><b>Ab</b>4 Jahren</li><li><b>Wo</b>Drinnen &amp; Draußen</li></ul>
+      <div class="row" style="margin-top:16px;margin-bottom:0;">
+        <a class="btn btn-primary" style="width:100%;text-align:center;" href="/jetzt-buchen/">Jetzt buchen</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="mr-cta">
+    <h2>Lust auf das echte Spiel?</h2>
+    <p>Wir bringen Mölkky und 11 weitere Spiele direkt zu dir &ndash; abholen oder liefern lassen.</p>
+    <div class="row">
+      <a class="btn btn-white" href="/jetzt-buchen/">Jetzt buchen</a>
+      <a class="btn btn-outline-white" href="/spieleauswahl/">Alle Spiele ansehen</a>
+    </div>
+  </div>
+
+</div>
+</div>
 
 <script>
 (function(){
