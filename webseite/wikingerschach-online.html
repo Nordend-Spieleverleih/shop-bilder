@@ -1,0 +1,1003 @@
+<div class="nsvk">
+<style>
+
+/* ---- Rahmen der Seite ---- */
+.nsvk{--g:#477c6e;--gd:#3a685c;--ink:#2b2b2b;--mut:#5d5d5d;--sand:#f6f2ed;--sand2:#ebe7e3;
+  font-family:'Nunito',system-ui,-apple-system,sans-serif;color:var(--ink);font-size:17px;line-height:1.6;}
+.nsvk *{box-sizing:border-box;}
+.nsvk .w{max-width:1040px;margin:0 auto;padding:0 20px;}
+.nsvk .eyebrow{display:inline-block;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.78rem;color:var(--g);margin:0 0 .4em;}
+.nsvk h1{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:900;line-height:1.08;margin:0 0 .3em;}
+.nsvk h2{font-size:clamp(1.3rem,2.4vw,1.7rem);font-weight:800;margin:0 0 .5em;}
+.nsvk .tagline{color:var(--mut);font-size:1.02rem;margin:0 0 20px;max-width:56ch;}
+.nsvk .stagewrap{margin:0 0 14px;}
+#kubbApp{position:relative;width:100%;aspect-ratio:16/9;max-height:min(74vh,660px);min-height:360px;
+  border-radius:18px;overflow:hidden;background:#b9d2e6;box-shadow:0 10px 30px rgba(0,0,0,.14);}
+#kubbApp:fullscreen{border-radius:0;max-height:none;aspect-ratio:auto;height:100%;}
+.nsvk .hint{font-size:.92rem;color:var(--mut);margin:0 0 30px;}
+.nsvk .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:0 0 30px;}
+.nsvk .box{background:var(--sand);border-radius:16px;padding:18px 20px;}
+.nsvk .box h2{font-size:1.15rem;margin-bottom:.4em;}
+.nsvk .box ul{margin:0;padding-left:18px;font-size:.96rem;color:#4a4a4a;line-height:1.6;}
+.nsvk .box ul li{margin-bottom:.3em;}
+.nsvk .cta{background:var(--g);color:#fff;border-radius:18px;padding:26px 24px;text-align:center;}
+.nsvk .cta h2{color:#fff;}
+.nsvk .cta p{color:#fff;opacity:.94;margin:0 0 16px;}
+.nsvk .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+.nsvk .btn2{display:inline-block;padding:13px 24px;border-radius:12px;font-weight:800;text-decoration:none;
+  background:#fff;color:var(--g)!important;border:2px solid #fff;}
+.nsvk .btn2.ghost{background:transparent;color:#fff!important;}
+.nsvk .btn2.ghost:hover{background:#fff;color:var(--g)!important;}
+.nsvk .back{display:inline-block;margin:0 0 26px;font-weight:800;color:var(--g)!important;text-decoration:none;font-size:.95rem;}
+@media(max-width:760px){.nsvk .cols{grid-template-columns:1fr;}
+  #kubbApp{aspect-ratio:3/4;max-height:76vh;min-height:420px;}
+  .nsvk .btn2{width:100%;text-align:center;}}
+
+#kubbApp{--green:#477c6e;--green-dark:#3a685c;--cream:#f6f2ed;--ink:#2b2b2b;}
+#kubbApp *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+#kubbApp, #kubbApp{margin:0;padding:0;width:100%;overflow:hidden;background:#b9d2e6;
+    font-family:'Nunito',system-ui,-apple-system,sans-serif;color:var(--ink);}
+#kubbApp #app{position:absolute;inset:0;overflow:hidden;}
+#kubbApp canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;}
+#kubbApp .hud{position:absolute;z-index:5;}
+#kubbApp #hudLeft{top:10px;left:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+#kubbApp #hudRight{top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+#kubbApp .chip{background:rgba(255,255,255,.85);border-radius:999px;padding:5px 12px;font-size:12px;
+    font-weight:800;color:var(--green-dark);letter-spacing:.3px;text-transform:uppercase;
+    box-shadow:0 2px 8px rgba(0,0,0,.10);white-space:nowrap;}
+#kubbApp .btn{background:rgba(255,255,255,.85);border:none;border-radius:999px;padding:7px 13px;font-size:12px;
+    font-weight:800;color:var(--green-dark);cursor:pointer;font-family:inherit;letter-spacing:.3px;
+    text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.10);}
+#kubbApp .btn:hover{background:#fff;}
+#kubbApp .btn.on{background:var(--green);color:#fff;}
+#kubbApp #sticks{position:absolute;bottom:14px;left:12px;display:flex;gap:4px;z-index:5;pointer-events:none;}
+#kubbApp .stick{width:7px;height:26px;border-radius:3px;background:#e2c49b;border:1.5px solid rgba(0,0,0,.18);
+    box-shadow:0 2px 5px rgba(0,0,0,.18);}
+#kubbApp .stick.used{opacity:.22;}
+#kubbApp #tip{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:5;pointer-events:none;
+    background:rgba(43,43,43,.70);color:#fff;border-radius:999px;padding:7px 18px;font-size:12.5px;
+    font-weight:800;letter-spacing:.3px;text-align:center;max-width:90vw;}
+#kubbApp #coach{position:absolute;left:50%;top:12px;transform:translate(-50%,-14px);z-index:8;width:min(430px,92vw);
+    background:rgba(255,255,255,.95);border-radius:16px;padding:12px 14px 12px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.22);border-left:5px solid var(--green);
+    opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;text-align:left;}
+#kubbApp #coach.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+#kubbApp #coach h3{margin:0 0 3px;font-size:14px;font-weight:900;color:var(--green-dark);}
+#kubbApp #coach p{margin:0;font-size:12.8px;line-height:1.45;color:#4a4a4a;}
+#kubbApp #coach p b{color:var(--green-dark);}
+#kubbApp #coachX{position:absolute;top:6px;right:8px;border:none;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:16px;font-weight:900;color:#a6a6a6;line-height:1;padding:4px 6px;}
+#kubbApp #coachX:hover{color:var(--ink);}
+@media (max-width:760px){#kubbApp #coach{top:78px;}}
+#kubbApp #toast{position:absolute;left:50%;top:24%;transform:translate(-50%,-50%) scale(.92);z-index:6;
+    background:rgba(43,43,43,.85);color:#fff;border-radius:14px;padding:11px 22px;font-size:18px;
+    font-weight:900;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;text-align:center;}
+#kubbApp #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+#kubbApp #overlay{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:rgba(38,50,45,.52);backdrop-filter:blur(3px);padding:16px;}
+#kubbApp #card{background:var(--cream);border-radius:20px;padding:22px 24px;max-width:440px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;max-height:92vh;overflow:auto;}
+#kubbApp #card h2{margin:0 0 8px;color:var(--green-dark);font-size:21px;font-weight:900;}
+#kubbApp #card p{margin:0 0 12px;font-size:14px;line-height:1.5;color:#4a4a4a;}
+#kubbApp #card ul{text-align:left;font-size:13.5px;line-height:1.65;color:#4a4a4a;margin:0 0 16px;padding-left:18px;}
+#kubbApp #card b{color:var(--green-dark);}
+#kubbApp .cta{background:var(--green);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-weight:900;
+    font-size:15px;cursor:pointer;font-family:inherit;margin:3px;}
+#kubbApp .cta:hover{background:var(--green-dark);}
+#kubbApp .cta.ghost{background:transparent;color:var(--green-dark);border:2px solid var(--green);}
+#kubbApp .brandline{margin-top:14px;font-size:11.5px;color:#7b7b7b;}
+#kubbApp .brandline a{color:var(--green-dark);font-weight:800;text-decoration:none;}
+#kubbApp #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;
+    background:var(--cream);color:var(--green-dark);font-weight:800;font-size:15px;text-align:center;padding:20px;}
+</style>
+
+<div class="w">
+  <span class="eyebrow">Online spielen</span>
+  <h1>Wikingerschach online spielen</h1>
+  <p class="tagline">Kubb im Browser: Wurfholz nehmen, &uuml;ber acht Meter zielen und die Kubbs der Gegenseite
+  umlegen &ndash; zum Schluss den K&ouml;nig. Und weil echtes Werfen nie millimetergenau ist,
+  streut auch hier jeder Wurf ein wenig.</p>
+</div>
+
+<div class="w stagewrap">
+  <div id="kubbApp">
+<div id="app">
+  <div id="loading">Spielfeld wird aufgebaut …</div>
+
+  <div class="hud" id="hudLeft">
+    <div class="chip">Kubbs: <span id="stKubbs">0/5</span></div>
+    <div class="chip" id="chipField" style="display:none">Feldkubbs: <span id="stField">0</span></div>
+    <div class="chip">König: <span id="stKing">steht</span></div>
+    <div class="chip">Würfe: <span id="stThrows">0</span></div>
+    <div class="chip">Rekord: <span id="stBest">–</span></div>
+  </div>
+
+  <div class="hud" id="hudRight">
+    <button class="btn" id="btnView">Draufsicht</button>
+    <button class="btn" id="btnPractice">Übung</button>
+    <button class="btn" id="btnSound">Ton an</button>
+    <button class="btn" id="btnReset">Neu aufstellen</button>
+    <button class="btn" id="btnFs" title="Vollbild">&#9143; Vollbild</button>
+  </div>
+
+  <div id="sticks"></div>
+  <div id="tip">Zielen: Maus/Finger aufs Feld · Loslassen zum Werfen</div>
+  <div id="coach">
+    <button id="coachX" title="Hinweis schließen">×</button>
+    <h3 id="coachTitle"></h3>
+    <p id="coachText"></p>
+  </div>
+  <div id="toast"></div>
+
+  <div id="overlay">
+    <div id="card">
+      <h2>🪵 Wikingerschach (Kubb)</h2>
+      <p>Wirf die Hölzer über 8 Meter, leg die fünf Kubbs um – und <b>ganz zum Schluss</b> den König.</p>
+      <ul>
+        <li><b>Zielen:</b> mit Maus oder Finger aufs Spielfeld drücken – der Zielkreis zeigt genau, wohin du wirfst.</li>
+        <li><b>Loslassen</b> = Wurf. Das Holz fliegt dorthin, aber <b>nicht aufs Zentimeter genau</b>: der Kreis zeigt die Streuung.</li>
+        <li>Du hast <b>6 Wurfhölzer pro Runde</b>, wie beim echten Kubb.</li>
+        <li>Umgeworfene Kubbs wirft der Gegner danach in deine Hälfte: <b>Feldkubbs zuerst</b> umlegen.</li>
+        <li>König zu früh getroffen = sofort verloren.</li>
+      </ul>
+      <button class="cta" id="btnStart">Spiel starten</button>
+      <button class="cta ghost" id="btnStartPractice">Übungsmodus</button>
+      <div class="brandline">Ein Spiel vom <a href="https://nordend-spieleverleih.de" target="_blank" rel="noopener">Nordend-Spieleverleih</a> – echtes Kubb für deine Feier gibt's bei uns zum Mieten.</div>
+    </div>
+  </div>
+</div>
+  </div>
+  <p class="hint">Zielen mit Maus oder Finger aufs Spielfeld &middot; loslassen wirft &middot;
+  <b>&#9143; Vollbild</b> macht es gr&ouml;&szlig;er. Funktioniert am Handy genauso wie am Rechner.</p>
+</div>
+
+<div class="w">
+  <div class="cols">
+    <div class="box">
+      <h2>So wird gespielt</h2>
+      <ul>
+        <li>Du hast <b>6 Wurfh&ouml;lzer pro Runde</b>.</li>
+        <li>Erst die <b>5 Kubbs</b> auf der gegen&uuml;berliegenden Grundlinie umlegen.</li>
+        <li>Getroffene Kubbs kommen als <b>Feldkubbs</b> in deine H&auml;lfte zur&uuml;ck &ndash; die z&auml;hlen zuerst.</li>
+        <li>Ganz zum Schluss f&auml;llt der <b>K&ouml;nig</b>. Zu fr&uuml;h getroffen hei&szlig;t: verloren.</li>
+        <li>Gez&auml;hlt wird, mit wie wenigen W&uuml;rfen du fertig wirst.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Das echte Spiel</h2>
+      <ul>
+        <li>Ein Kubb-Set hat <b>1 K&ouml;nig, 10 Kubbs, 6 Wurfh&ouml;lzer</b> und 4 Eckst&auml;be.</li>
+        <li>Das Feld ist <b>5 &times; 8 Meter</b> &ndash; passt in jeden Park und auf viele G&auml;rten.</li>
+        <li>Gespielt wird in zwei Teams, von Kindern ab ca. 6 Jahren bis Opa.</li>
+        <li>Bei uns in Frankfurt zum <b>Mieten</b> &ndash; abholen oder ins Nordend geliefert.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta">
+    <h2>Lust auf echtes Wikingerschach?</h2>
+    <p>Wir bringen das Set zum Kindergeburtstag, zur Gartenparty oder zur Firmenfeier &ndash; mit 11 weiteren Spielen.</p>
+    <div class="btns">
+      <a class="btn2" href="/jetzt-buchen/">Jetzt buchen</a>
+      <a class="btn2 ghost" href="/spieleauswahl/">Alle 12 Spiele ansehen</a>
+      <a class="btn2 ghost" href="/online-probespielen/">Weitere Online-Spiele</a>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+const _dbg = m => { const l=document.getElementById('loading'); if(l){ l.style.display='flex'; l.textContent=m; } };
+window.addEventListener('error', e => { if(/no-webgl/.test(e.message||'')) return;
+  _dbg('Das Spiel konnte nicht geladen werden. Bitte die Seite neu laden.'); });
+
+/* ===================== Maße (echtes Kubb-Set) ===================== */
+const PITCH_W = 5, PITCH_L = 8;          // 5 x 8 m
+const FAR_Z = -PITCH_L/2, NEAR_Z = PITCH_L/2;
+const KUBB_W = 0.07, KUBB_H = 0.15;      // 7 x 7 x 15 cm
+const KING_W = 0.09, KING_H = 0.30;      // 9 x 9 x 30 cm
+const BAT_R = 0.022, BAT_H = 0.30;       // Ø 4,4 cm, 30 cm
+const BATONS_PER_ROUND = 6;
+
+const S = {
+  mode:'game', phase:'idle', throws:0, batonsLeft:BATONS_PER_ROUND,
+  sound:false, topView:false, best:null, roundEnding:false
+};
+try{ S.best = localStorage.getItem('nsv_kubb_best'); }catch(e){}
+
+const $ = id => document.getElementById(id);
+const el = {
+  loading:$('loading'), overlay:$('overlay'), card:$('card'), sticks:$('sticks'),
+  stKubbs:$('stKubbs'), stField:$('stField'), chipField:$('chipField'), stKing:$('stKing'),
+  stThrows:$('stThrows'), stBest:$('stBest'), tip:$('tip'), toast:$('toast'),
+  coach:$('coach'), coachTitle:$('coachTitle'), coachText:$('coachText'), coachX:$('coachX'),
+  btnView:$('btnView'), btnPractice:$('btnPractice'), btnSound:$('btnSound'), btnReset:$('btnReset')
+};
+if (S.best) el.stBest.textContent = S.best + ' Würfe';
+
+/* ===================== Three ===================== */
+(function webglCheck(){
+  const c=document.createElement('canvas');
+  const ok=!!(window.WebGLRenderingContext&&(c.getContext('webgl2')||c.getContext('webgl')));
+  if(!ok){
+    const l=document.getElementById('loading');
+    l.innerHTML='<div style="max-width:420px"><b>Dieses Gerät kann leider kein 3D im Browser darstellen.</b>'+
+      '<br><br>Probier es an einem anderen Gerät oder in einem anderen Browser – '+
+      'oder spiel solange <a href="https://nordend-spieleverleih.de/flitzpuck-arena/" style="color:#477c6e">Flitzpuck</a>. '+
+      'Echtes Wikingerschach gibt es bei uns zum <a href="https://nordend-spieleverleih.de/jetzt-buchen/" style="color:#477c6e">Mieten</a>.</div>';
+    l.style.display='flex';
+    throw new Error('no-webgl');
+  }
+})();
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xcfe0e8, 22, 60);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+$('app').appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(50,1,0.1,200);
+const CAM_HOME = new THREE.Vector3(0,1.58,NEAR_Z+1.0);
+const CAM_LOOK = new THREE.Vector3(0,0.22,FAR_Z+0.4);
+const CAM_TOP  = new THREE.Vector3(0,9.6,0.8);
+camera.position.copy(CAM_HOME);
+const camTarget = CAM_LOOK.clone(), camDesired = CAM_HOME.clone(), lookDesired = CAM_LOOK.clone();
+camera.lookAt(camTarget);
+scene.add(camera);
+
+const stage=document.getElementById('kubbApp');
+function resize(){
+  const r=stage.getBoundingClientRect();
+  const w=Math.max(320,Math.round(r.width)),h=Math.max(240,Math.round(r.height));
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.fov = (w/h < 0.85) ? 60 : 50;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);
+if(window.ResizeObserver){new ResizeObserver(()=>resize()).observe(stage);}
+document.addEventListener('fullscreenchange',()=>setTimeout(resize,60));
+
+/* ===================== Licht ===================== */
+scene.add(new THREE.HemisphereLight(0xeaf4ff, 0x6d8a4e, 0.85));
+const sun = new THREE.DirectionalLight(0xfff2d8, 1.45);
+sun.position.set(-5,8.5,5.5); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-7.5; sun.shadow.camera.right=7.5;
+sun.shadow.camera.top=8; sun.shadow.camera.bottom=-8;
+sun.shadow.camera.near=1; sun.shadow.camera.far=26;
+sun.shadow.bias=-0.0011; sun.shadow.normalBias=0.02;
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffffff,0.2));
+
+/* ===================== Gemalte Parkkulisse ===================== */
+function panorama(){
+  const W=4096,H=1280;
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  const HOR = H*0.63;                      // Horizontlinie
+
+  // Himmel
+  const sky=x.createLinearGradient(0,0,0,HOR);
+  sky.addColorStop(0,'#5d9fd6'); sky.addColorStop(.45,'#8dc0e4');
+  sky.addColorStop(.82,'#cfe3ef'); sky.addColorStop(1,'#eaf1ee');
+  x.fillStyle=sky; x.fillRect(0,0,W,HOR);
+
+  // Wolken (weich)
+  for(let i=0;i<26;i++){
+    const cx=Math.random()*W, cy=H*0.06+Math.random()*HOR*0.42;
+    const s=70+Math.random()*190;
+    x.save(); x.globalAlpha=0.20+Math.random()*0.35;
+    for(let b=0;b<9;b++){
+      const g=x.createRadialGradient(cx+(Math.random()-.5)*s*1.9, cy+(Math.random()-.5)*s*0.45,0,
+                                     cx+(Math.random()-.5)*s*1.9, cy+(Math.random()-.5)*s*0.45, s*0.6);
+      g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
+      x.fillStyle=g; x.beginPath(); x.arc(cx+(Math.random()-.5)*s*1.6, cy+(Math.random()-.5)*s*0.4, s*0.62,0,7); x.fill();
+    }
+    x.restore();
+  }
+
+  // Boden unter dem Horizont
+  const gr=x.createLinearGradient(0,HOR,0,H);
+  gr.addColorStop(0,'#9cb77a'); gr.addColorStop(1,'#7ba158');
+  x.fillStyle=gr; x.fillRect(0,HOR,W,H-HOR);
+
+  // weit entfernte Hügel / Dunst
+  x.save(); x.filter='blur(6px)';
+  for(let layer=0;layer<2;layer++){
+    const base = HOR - 10 - layer*16;
+    const col = layer===0 ? 'rgba(150,180,170,.55)' : 'rgba(120,160,150,.45)';
+    x.fillStyle=col; x.beginPath(); x.moveTo(0,base);
+    for(let px=0;px<=W;px+=40){
+      const y = base - (Math.sin(px*0.0016+layer*2.3)*26 + Math.sin(px*0.0041+layer)*16 + 26);
+      x.lineTo(px,y);
+    }
+    x.lineTo(W,HOR+4); x.lineTo(0,HOR+4); x.closePath(); x.fill();
+  }
+  x.restore();
+
+  // Baumreihen: hinten dunstig, vorne kräftig
+  function canopy(cx, baseY, h, hue, alpha, blur){
+    x.save();
+    if (blur) x.filter = `blur(${blur}px)`;
+    x.globalAlpha = alpha;
+    // Stamm
+    x.fillStyle = `hsl(28,24%,${26+Math.random()*8}%)`;
+    const tw = Math.max(3,h*0.055);
+    x.fillRect(cx-tw/2, baseY-h*0.42, tw, h*0.44);
+    // Krone: viele weiche Kleckse
+    const blobs = 10+Math.floor(Math.random()*9);
+    for(let i=0;i<blobs;i++){
+      const a=Math.random()*Math.PI*2, r=Math.random();
+      const bx = cx + Math.cos(a)*h*0.30*r*1.25;
+      const by = baseY - h*0.62 + Math.sin(a)*h*0.22*r;
+      const br = h*(0.14+Math.random()*0.15);
+      const light = 24 + Math.random()*20 + (by < baseY-h*0.7 ? 8 : 0);
+      x.fillStyle = `hsl(${hue+Math.random()*16-8},${34+Math.random()*20}%,${light}%)`;
+      x.beginPath(); x.arc(bx,by,br,0,7); x.fill();
+    }
+    // Sonnenlicht oben drauf
+    x.globalAlpha = alpha*0.5;
+    for(let i=0;i<5;i++){
+      const bx = cx + (Math.random()-.4)*h*0.3, by = baseY - h*0.82 + (Math.random()-.5)*h*0.12;
+      x.fillStyle = `hsl(${hue+10},46%,${50+Math.random()*12}%)`;
+      x.beginPath(); x.arc(bx,by,h*(0.08+Math.random()*0.09),0,7); x.fill();
+    }
+    x.restore();
+  }
+  // hintere Reihe (dunstig)
+  for(let i=0;i<150;i++) canopy(Math.random()*W, HOR+6, 90+Math.random()*80, 96+Math.random()*22, 0.55, 4);
+  // mittlere Reihe
+  for(let i=0;i<110;i++) canopy(Math.random()*W, HOR+16, 140+Math.random()*120, 100+Math.random()*24, 0.82, 1.5);
+  // vordere Reihe (kräftig)
+  for(let i=0;i<70;i++) canopy(Math.random()*W, HOR+30, 200+Math.random()*170, 95+Math.random()*26, 1, 0);
+
+  // Büsche / Saum
+  x.save();
+  for(let i=0;i<260;i++){
+    const bx=Math.random()*W, by=HOR+26+Math.random()*40, r=16+Math.random()*34;
+    x.fillStyle=`hsl(${96+Math.random()*22},${30+Math.random()*18}%,${24+Math.random()*16}%)`;
+    x.globalAlpha=0.9; x.beginPath(); x.arc(bx,by,r,0,7); x.fill();
+  }
+  x.restore();
+
+  // Dunstschleier am Horizont
+  const haze=x.createLinearGradient(0,HOR-70,0,HOR+70);
+  haze.addColorStop(0,'rgba(226,238,240,0)'); haze.addColorStop(.5,'rgba(226,238,240,.55)');
+  haze.addColorStop(1,'rgba(226,238,240,0)');
+  x.fillStyle=haze; x.fillRect(0,HOR-70,W,140);
+
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  t.wrapS=THREE.RepeatWrapping;
+  t.anisotropy=8;
+  return t;
+}
+(function skyDome(){
+  const geo = new THREE.SphereGeometry(80, 48, 32);
+  const mat = new THREE.MeshBasicMaterial({map:panorama(), side:THREE.BackSide, fog:false, depthWrite:false});
+  const m = new THREE.Mesh(geo, mat);
+  m.position.y = 14;         // Horizont der Textur auf Augenhöhe schieben
+  scene.add(m);
+})();
+
+/* ===================== Rasen ===================== */
+function grassTexture(){
+  const s=1024,c=document.createElement('canvas'); c.width=c.height=s;
+  const x=c.getContext('2d');
+  x.fillStyle='#78a053'; x.fillRect(0,0,s,s);
+  for(let i=0;i<60;i++){
+    const px=Math.random()*s,py=Math.random()*s,r=60+Math.random()*180;
+    const g=x.createRadialGradient(px,py,0,px,py,r);
+    g.addColorStop(0,`hsla(${86+Math.random()*20},${28+Math.random()*16}%,${30+Math.random()*16}%,.28)`);
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,7);x.fill();
+  }
+  for(let i=0;i<26000;i++){
+    const px=Math.random()*s,py=Math.random()*s;
+    x.strokeStyle=`hsla(${82+Math.random()*28},${30+Math.random()*26}%,${22+Math.random()*30}%,${.18+Math.random()*.4})`;
+    x.lineWidth=0.8+Math.random()*1.1;
+    x.beginPath();x.moveTo(px,py);x.lineTo(px+(Math.random()-.5)*2.5,py-(2+Math.random()*5));x.stroke();
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(16,16);
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8;
+  return t;
+}
+function stripeTexture(){
+  const c=document.createElement('canvas'); c.width=4; c.height=64;
+  const x=c.getContext('2d');
+  x.fillStyle='rgba(255,255,255,0.055)'; x.fillRect(0,0,4,32);
+  x.fillStyle='rgba(0,0,0,0.055)'; x.fillRect(0,32,4,32);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1,9);
+  return t;
+}
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120,120),
+  new THREE.MeshLambertMaterial({map:grassTexture()}));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+const stripes = new THREE.Mesh(new THREE.PlaneGeometry(26,26),
+  new THREE.MeshBasicMaterial({map:stripeTexture(), transparent:true, opacity:0.75, depthWrite:false}));
+stripes.rotation.x=-Math.PI/2; stripes.position.y=0.004; scene.add(stripes);
+
+/* ===================== Holz-Textur ===================== */
+function woodTexture(base,dark){
+  const s=256,c=document.createElement('canvas'); c.width=c.height=s;
+  const x=c.getContext('2d');
+  x.fillStyle=base; x.fillRect(0,0,s,s);
+  for(let i=0;i<120;i++){
+    x.strokeStyle=`rgba(${dark},${0.04+Math.random()*0.14})`;
+    x.lineWidth=0.6+Math.random()*2.2;
+    const y=Math.random()*s; x.beginPath(); x.moveTo(0,y);
+    for(let px=0;px<=s;px+=20) x.lineTo(px,y+Math.sin(px*0.05+i)*3+(Math.random()-.5)*2);
+    x.stroke();
+  }
+  for(let i=0;i<18;i++){
+    x.fillStyle=`rgba(${dark},0.10)`; x.beginPath();
+    x.ellipse(Math.random()*s,Math.random()*s,3+Math.random()*8,2+Math.random()*5,Math.random()*3,0,7); x.fill();
+  }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+const texWood = woodTexture('#dcb98c','120,80,42');
+const texWoodK = woodTexture('#c08d55','95,58,26');
+
+/* ===================== Spielfeld ===================== */
+(function pitch(){
+  const lineMat=new THREE.MeshBasicMaterial({color:0xf6f3e8,transparent:true,opacity:0.5,depthWrite:false});
+  const mk=(w,l,px,pz)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,l),lineMat);
+    m.rotation.x=-Math.PI/2;m.position.set(px,0.008,pz);scene.add(m);};
+  mk(PITCH_W+0.06,0.05,0,FAR_Z); mk(PITCH_W+0.06,0.05,0,NEAR_Z);
+  mk(PITCH_W+0.06,0.035,0,0);
+  mk(0.05,PITCH_L,-PITCH_W/2,0); mk(0.05,PITCH_L,PITCH_W/2,0);
+  const pegG=new THREE.CylinderGeometry(0.02,0.02,0.30,8);
+  const pegM=new THREE.MeshLambertMaterial({map:texWood,color:0xb59068});
+  [[-PITCH_W/2,FAR_Z],[PITCH_W/2,FAR_Z],[-PITCH_W/2,NEAR_Z],[PITCH_W/2,NEAR_Z]].forEach(([px,pz])=>{
+    const p=new THREE.Mesh(pegG,pegM); p.position.set(px,0.15,pz); p.castShadow=true; scene.add(p);
+  });
+})();
+
+/* ===================== Physik ===================== */
+const world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
+world.broadphase=new CANNON.SAPBroadphase(world);
+world.allowSleep=true;
+world.defaultContactMaterial.friction=0.45;
+world.defaultContactMaterial.restitution=0.06;
+const matG=new CANNON.Material('g'), matW=new CANNON.Material('w');
+world.addContactMaterial(new CANNON.ContactMaterial(matG,matW,{friction:0.6,restitution:0.05}));
+world.addContactMaterial(new CANNON.ContactMaterial(matW,matW,{friction:0.33,restitution:0.16}));
+const groundBody=new CANNON.Body({mass:0,shape:new CANNON.Plane(),material:matG});
+groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
+world.addBody(groundBody);
+
+/* ===================== Objekte ===================== */
+const kubbs=[];     // {mesh,body,type:'base'|'field'|'own',down,cleared}
+const batons=[];
+let king=null, flying=null;
+
+function kubbMesh(w,h,tex){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),
+    new THREE.MeshLambertMaterial({map:tex}));
+  m.castShadow=true; m.receiveShadow=true; return m;
+}
+function addKubb(px,pz,type){
+  const mesh=kubbMesh(KUBB_W,KUBB_H,texWood); scene.add(mesh);
+  const body=new CANNON.Body({mass:0.6,material:matW,
+    shape:new CANNON.Box(new CANNON.Vec3(KUBB_W/2,KUBB_H/2,KUBB_W/2)),
+    position:new CANNON.Vec3(px,KUBB_H/2+0.002,pz),
+    angularDamping:0.35,linearDamping:0.1,sleepSpeedLimit:0.12,sleepTimeLimit:0.35});
+  world.addBody(body);
+  const k={mesh,body,type,down:false,cleared:false};
+  body.addEventListener('collide',ev=>onCollide(ev));
+  kubbs.push(k); return k;
+}
+function addKing(){
+  const g=new THREE.Group();
+  const b=kubbMesh(KING_W,KING_H,texWoodK); g.add(b);
+  const crown=new THREE.Mesh(new THREE.CylinderGeometry(KING_W*0.6,KING_W*0.6,0.03,12),
+    new THREE.MeshLambertMaterial({color:0xcf3b2f}));
+  crown.position.y=KING_H/2+0.015; crown.castShadow=true; g.add(crown);
+  for(let i=0;i<6;i++){
+    const sp=new THREE.Mesh(new THREE.ConeGeometry(0.013,0.04,6),
+      new THREE.MeshLambertMaterial({color:0xcf3b2f}));
+    const a=i/6*Math.PI*2;
+    sp.position.set(Math.cos(a)*KING_W*0.44,KING_H/2+0.05,Math.sin(a)*KING_W*0.44);
+    sp.castShadow=true; g.add(sp);
+  }
+  scene.add(g);
+  const body=new CANNON.Body({mass:1.2,material:matW,
+    shape:new CANNON.Box(new CANNON.Vec3(KING_W/2,KING_H/2,KING_W/2)),
+    position:new CANNON.Vec3(0,KING_H/2+0.002,0),
+    angularDamping:0.35,linearDamping:0.1,sleepSpeedLimit:0.12,sleepTimeLimit:0.35});
+  world.addBody(body);
+  king={mesh:g,body,down:false};
+  body.addEventListener('collide',ev=>onCollide(ev));
+}
+
+/* Wurfholz in der Hand (an der Kamera) */
+const handGroup=new THREE.Group();
+const handBaton=new THREE.Mesh(new THREE.CylinderGeometry(BAT_R,BAT_R,BAT_H,16),
+  new THREE.MeshLambertMaterial({map:texWood,color:0xffe8c8}));
+handBaton.rotation.z=Math.PI*0.5;
+handBaton.rotation.y=Math.PI*0.12;
+handGroup.add(handBaton);
+handGroup.position.set(0.30,-0.26,-0.72);
+handGroup.rotation.set(-0.15,0.25,-0.55);
+camera.add(handGroup);
+
+function spawnBaton(p,v,av){
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(BAT_R,BAT_R,BAT_H,16),
+    new THREE.MeshLambertMaterial({map:texWood,color:0xffe8c8}));
+  mesh.castShadow=true; scene.add(mesh);
+  const body=new CANNON.Body({mass:0.33,material:matW,
+    shape:new CANNON.Cylinder(BAT_R,BAT_R,BAT_H,12),
+    position:new CANNON.Vec3(p.x,p.y,p.z),
+    angularDamping:0.02,linearDamping:0.0,sleepSpeedLimit:0.15,sleepTimeLimit:0.4});
+  body.velocity.set(v.x,v.y,v.z);
+  body.angularVelocity.set(av.x,av.y,av.z);
+  world.addBody(body);
+  const o={mesh,body};
+  body.addEventListener('collide',ev=>onCollide(ev));
+  batons.push(o); return o;
+}
+
+/* ===================== Zielkreis ===================== */
+const aim=new THREE.Group();
+const aimRing=new THREE.Mesh(new THREE.RingGeometry(0.30,0.345,48),
+  new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.85,depthWrite:false,side:THREE.DoubleSide}));
+aimRing.rotation.x=-Math.PI/2; aim.add(aimRing);
+const aimFill=new THREE.Mesh(new THREE.CircleGeometry(0.30,40),
+  new THREE.MeshBasicMaterial({color:0x477c6e,transparent:true,opacity:0.22,depthWrite:false,side:THREE.DoubleSide}));
+aimFill.rotation.x=-Math.PI/2; aim.add(aimFill);
+const aimDot=new THREE.Mesh(new THREE.CircleGeometry(0.035,16),
+  new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.95,depthWrite:false,side:THREE.DoubleSide}));
+aimDot.rotation.x=-Math.PI/2; aim.add(aimDot);
+aim.position.y=0.012; aim.visible=false; scene.add(aim);
+
+/* Flugbahn-Vorschau */
+const arcGeo=new THREE.BufferGeometry();
+arcGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(32*3),3));
+const arc=new THREE.Points(arcGeo,new THREE.PointsMaterial({color:0xffffff,size:0.055,transparent:true,opacity:0.65,depthWrite:false}));
+arc.visible=false; scene.add(arc);
+
+/* ===================== Wurf-Mathematik ===================== */
+const HAND=new THREE.Vector3(0.18,1.20,NEAR_Z+0.05);
+function flightTime(dist){ return 0.46 + dist*0.072; }
+function solveVelocity(from,to,T){
+  const g=9.82;
+  return new THREE.Vector3(
+    (to.x-from.x)/T,
+    (to.y-from.y)/T + 0.5*g*T,
+    (to.z-from.z)/T
+  );
+}
+function scatterSigma(dist){ return 0.042 + dist*0.0108; }   // ~0.13 m auf 8 m
+function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+/* ===================== Eingabe ===================== */
+const ray=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),-0.08);
+let aiming=false;
+const target=new THREE.Vector3(0,0.08,FAR_Z);
+
+function updateTargetFromEvent(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  const s=e.touches&&e.touches[0]?e.touches[0]:e;
+  ndc.x=((s.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((s.clientY-r.top)/r.height)*2+1;
+  ray.setFromCamera(ndc,camera);
+  const hit=new THREE.Vector3();
+  if (!ray.ray.intersectPlane(groundPlane,hit)) return false;
+  hit.x=Math.max(-PITCH_W/2-0.9,Math.min(PITCH_W/2+0.9,hit.x));
+  hit.z=Math.max(FAR_Z-1.0,Math.min(NEAR_Z-1.0,hit.z));
+  target.set(hit.x,0.08,hit.z);
+  return true;
+}
+function refreshAimVisuals(){
+  const dist=Math.hypot(target.x-HAND.x,target.z-HAND.z);
+  const sig=scatterSigma(dist);
+  const r=sig*1.9;
+  aim.position.set(target.x,0.012,target.z);
+  aimRing.geometry.dispose();
+  aimRing.geometry=new THREE.RingGeometry(r,r*1.14,48);
+  aimFill.geometry.dispose();
+  aimFill.geometry=new THREE.CircleGeometry(r,40);
+  aim.visible=true;
+  // Flugbahn
+  const T=flightTime(dist);
+  const v=solveVelocity(HAND,target,T);
+  const pos=arcGeo.attributes.position;
+  for(let i=0;i<32;i++){
+    const t=(i/31)*T;
+    pos.setXYZ(i, HAND.x+v.x*t, HAND.y+v.y*t-0.5*9.82*t*t, HAND.z+v.z*t);
+  }
+  pos.needsUpdate=true;
+  arc.visible=true;
+}
+function hideAim(){ aim.visible=false; arc.visible=false; }
+
+const dom=renderer.domElement;
+function onDown(e){
+  if (S.phase!=='aiming') return;
+  e.preventDefault();
+  aiming=true;
+  if (updateTargetFromEvent(e)) refreshAimVisuals();
+}
+function onMove(e){
+  if (!aiming) return;
+  e.preventDefault();
+  if (updateTargetFromEvent(e)) refreshAimVisuals();
+}
+function onUp(e){
+  if (!aiming) return;
+  aiming=false;
+  hideAim();
+  doThrow();
+}
+dom.addEventListener('mousedown',onDown);
+addEventListener('mousemove',onMove);
+addEventListener('mouseup',onUp);
+dom.addEventListener('touchstart',onDown,{passive:false});
+addEventListener('touchmove',onMove,{passive:false});
+addEventListener('touchend',onUp);
+// Maus-Hover zeigt den Zielkreis auch ohne Drücken
+dom.addEventListener('mousemove',e=>{
+  if (S.phase!=='aiming'||aiming) return;
+  if (updateTargetFromEvent(e)) refreshAimVisuals();
+});
+dom.addEventListener('mouseleave',()=>{ if(!aiming) hideAim(); });
+
+let handPull=0;
+function doThrow(){
+  S.phase='flying'; S.throws++; S.batonsLeft--;
+  const dist=Math.hypot(target.x-HAND.x,target.z-HAND.z);
+  const sig=scatterSigma(dist);
+  const land=new THREE.Vector3(
+    target.x + gauss()*sig,
+    0.085,
+    target.z + gauss()*sig*1.12
+  );
+  const T=flightTime(dist);
+  const v=solveVelocity(HAND,land,T);
+  const tumble=-(2*Math.PI*1.3)/T;
+  flying=spawnBaton(HAND,v,{x:tumble,y:(Math.random()-0.5)*0.8,z:(Math.random()-0.5)*0.6});
+  handPull=1;
+  settle=0; syncHUD();
+}
+
+/* ===================== Sound ===================== */
+let actx=null,lastSnd=0;
+function audio(){ if(!S.sound) return null;
+  if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;} }
+  if(actx.state==='suspended') actx.resume(); return actx; }
+function clack(vol,pitch){
+  const ac=audio(); if(!ac) return;
+  const t=ac.currentTime, dur=0.1;
+  const buf=ac.createBuffer(1,Math.floor(ac.sampleRate*dur),ac.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,5);
+  const src=ac.createBufferSource(); src.buffer=buf;
+  const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=430*pitch; bp.Q.value=2;
+  const g=ac.createGain(); g.gain.value=Math.min(0.55,vol);
+  src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  const osc=ac.createOscillator(); osc.type='triangle'; osc.frequency.value=175*pitch;
+  const og=ac.createGain(); og.gain.setValueAtTime(Math.min(0.22,vol*0.5),t);
+  og.gain.exponentialRampToValueAtTime(0.0008,t+0.13);
+  osc.connect(og); og.connect(ac.destination); osc.start(t); osc.stop(t+0.14);
+}
+function onCollide(ev){
+  const v=ev.contact?Math.abs(ev.contact.getImpactVelocityAlongNormal()):0;
+  if(v<1.2) return;
+  const now=performance.now(); if(now-lastSnd<45) return; lastSnd=now;
+  clack(Math.min(0.5,v/14), ev.body===groundBody?0.65:1.3);
+}
+
+/* ===================== Auswertung ===================== */
+let settle=0;
+function isDown(o){
+  const up=new CANNON.Vec3(0,1,0), w=new CANNON.Vec3();
+  o.body.quaternion.vmult(up,w); return w.y<0.62;
+}
+function asleep(){
+  const list=[...kubbs.map(k=>k.body)];
+  if(king) list.push(king.body);
+  if(flying) list.push(flying.body);
+  for(const b of list){
+    if(b.velocity.lengthSquared()>0.05||b.angularVelocity.lengthSquared()>0.16) return false;
+  }
+  return true;
+}
+function counts(){
+  const base=kubbs.filter(k=>k.type==='base');
+  const field=kubbs.filter(k=>k.type==='field'&&!k.cleared);
+  return {
+    baseStanding: base.filter(k=>!k.down).length,
+    baseDown: base.filter(k=>k.down).length,
+    fieldStanding: field.filter(k=>!k.down).length
+  };
+}
+function syncHUD(){
+  const c=counts();
+  el.stKubbs.textContent=`${5-c.baseStanding}/5`;
+  el.stField.textContent=c.fieldStanding;
+  el.chipField.style.display=c.fieldStanding?'block':'none';
+  el.stKing.textContent=king&&king.down?'gefallen':'steht';
+  el.stThrows.textContent=S.throws;
+  el.sticks.innerHTML='';
+  for(let i=0;i<BATONS_PER_ROUND;i++){
+    const d=document.createElement('div');
+    d.className='stick'+(i<BATONS_PER_ROUND-S.batonsLeft?' used':'');
+    el.sticks.appendChild(d);
+  }
+}
+
+function evaluate(){
+  const before=counts();
+
+  // König
+  if(king&&!king.down&&isDown(king)){
+    if(S.mode==='practice'){
+      toast('König gefallen (Übung)');
+      setTimeout(()=>standUp(king,0,0),800);
+    } else if(before.baseStanding===0&&before.fieldStanding===0){
+      king.down=true; syncHUD(); return win();
+    } else {
+      king.down=true; syncHUD(); return lose();
+    }
+  }
+
+  // Kubbs
+  let hits=0;
+  for(const k of kubbs){
+    if(k.down||k.cleared||k.type==='own') continue;
+    if(!isDown(k)) continue;
+    if(k.type==='base'&&before.fieldStanding>0&&S.mode==='game'){
+      toast('Erst die Feldkubbs!');
+      setTimeout(()=>standUp(k,k.body.position.x,k.body.position.z),420);
+      continue;
+    }
+    k.down=true; hits++;
+    if(k.type==='field'){ k.cleared=true; setTimeout(()=>fadeOut(k),420); }
+  }
+  if(hits) toast(hits>1?`${hits} Kubbs umgelegt!`:'Getroffen!');
+  syncHUD();
+
+  const c=counts();
+  if(c.baseStanding===0&&c.fieldStanding===0&&king&&!king.down){
+    tip('Alle Kubbs liegen – jetzt den König umwerfen!');
+    coach('king','Jetzt der König!',
+      'Alle Kubbs liegen – jetzt den <b>König</b> in der Mitte umwerfen, dann hast du gewonnen. '+
+      'Er muss immer als Letzter fallen.',13);
+  } else if(hits===0&&S.throws<=3&&S.phase!=='over'){
+    coach('spread','Knapp vorbei?',
+      'Das Holz landet <b>nicht exakt</b> im Zielpunkt. Der Kreis zeigt dir die Streuung – '+
+      'je weiter das Ziel weg ist, desto größer wird er. Näher ans Ziel heißt genauer.',12);
+  }
+
+  if(S.batonsLeft<=0 && S.mode==='game'){ endRound(); return; }
+  if(S.batonsLeft<=0 && S.mode==='practice'){ S.batonsLeft=BATONS_PER_ROUND; clearBatons(); }
+  S.phase='aiming';
+  syncHUD();
+}
+
+function standUp(o,px,pz){
+  o.body.wakeUp();
+  o.body.velocity.setZero(); o.body.angularVelocity.setZero();
+  o.body.quaternion.set(0,0,0,1);
+  o.body.position.set(px,(o===king?KING_H:KUBB_H)/2+0.002,pz);
+  o.down=false; syncHUD();
+}
+function fadeOut(k){
+  k.mesh.material=k.mesh.material.clone();
+  k.mesh.material.transparent=true;
+  let a=1; const id=setInterval(()=>{
+    a-=0.09; k.mesh.material.opacity=Math.max(0,a);
+    if(a<=0){clearInterval(id); scene.remove(k.mesh); world.removeBody(k.body);}
+  },30);
+}
+function clearBatons(){
+  batons.forEach(b=>{
+    b.mesh.material=b.mesh.material.clone(); b.mesh.material.transparent=true;
+    let a=1; const id=setInterval(()=>{
+      a-=0.12; b.mesh.material.opacity=Math.max(0,a);
+      if(a<=0){clearInterval(id); scene.remove(b.mesh); world.removeBody(b.body);}
+    },28);
+  });
+  batons.length=0; flying=null;
+}
+
+function endRound(){
+  S.phase='round'; S.roundEnding=true;
+  toast('Runde vorbei – der Gegner räumt ab');
+  setTimeout(()=>{
+    clearBatons();
+    const toss=kubbs.filter(k=>k.type==='base'&&k.down&&!k.cleared);
+    toss.forEach((k,i)=>{
+      setTimeout(()=>{
+        k.type='field';
+        const px=(Math.random()*2-1)*(PITCH_W/2-0.5);
+        const pz=0.8+Math.random()*(NEAR_Z-1.5);
+        k.body.wakeUp();
+        k.body.position.set(px,1.5,pz);
+        k.body.quaternion.set(0,0,0,1);
+        k.body.velocity.set(0,-1.5,0);
+        k.body.angularVelocity.set(0,0,0);
+        k.down=false;
+        k.mesh.material=k.mesh.material.clone();
+        k.mesh.material.color.setHex(0xffd9a0);
+        syncHUD();
+      }, i*220);
+    });
+    setTimeout(()=>{
+      S.batonsLeft=BATONS_PER_ROUND;
+      S.roundEnding=false;
+      S.phase='aiming';
+      const c=counts();
+      tip(c.fieldStanding?'Feldkubbs zuerst umlegen!':'Zielen: Maus/Finger aufs Feld · Loslassen zum Werfen');
+      if(c.fieldStanding){
+        coach('field','Feldkubbs!',
+          'Deine Treffer hat der Gegner als <b>Feldkubbs</b> in deine Hälfte geworfen (hellere Klötze). '+
+          'Die musst du <b>zuerst</b> umlegen – erst danach zählen wieder die hinteren Kubbs.',14);
+      } else {
+        coach('round','Neue Runde','Deine 6 Hölzer sind weg – du bekommst 6 neue. Gezählt wird am Ende, wie viele Würfe du gebraucht hast.',10);
+      }
+      syncHUD();
+    }, 600+toss.length*220);
+  },900);
+}
+
+/* ===================== Meldungen ===================== */
+let toastT=0;
+function toast(t){ el.toast.textContent=t; el.toast.classList.add('show'); toastT=1.7; }
+function tip(t){ el.tip.textContent=t; }
+
+/* ---- Mini-Anleitung: Infokästchen, jedes nur einmal pro Partie ---- */
+const coachSeen=new Set();
+let coachT=0;
+function coachHide(){ el.coach.classList.remove('show'); coachT=0; }
+function coach(id,title,text,secs){
+  if(coachSeen.has(id)) return;
+  coachSeen.add(id);
+  el.coachTitle.textContent=title;
+  el.coachText.innerHTML=text;
+  el.coach.classList.add('show');
+  coachT=secs||11;
+}
+el.coachX.onclick=coachHide;
+
+function win(){
+  S.phase='over';
+  let b=S.best?parseInt(S.best,10):null, rec='';
+  if(b===null||S.throws<b){
+    S.best=String(S.throws);
+    try{localStorage.setItem('nsv_kubb_best',S.best);}catch(e){}
+    el.stBest.textContent=S.best+' Würfe';
+    rec='<p><b>Neuer persönlicher Rekord!</b></p>';
+  }
+  showCard(`<h2>👑 Der König ist gefallen!</h2>
+    <p>Alle Kubbs umgelegt und zum Schluss den König – mit <b>${S.throws} Würfen</b>.</p>${rec}
+    <button class="cta" id="again">Nochmal</button>
+    <button class="cta ghost" id="prac">Übungsmodus</button>
+    <div class="brandline">Lust auf echtes Kubb im Park? <a href="https://nordend-spieleverleih.de/jetzt-buchen/" target="_blank" rel="noopener">Beim Nordend-Spieleverleih mieten</a></div>`);
+}
+function lose(){
+  S.phase='over';
+  showCard(`<h2>😬 König zu früh getroffen</h2>
+    <p>Beim Kubb ist das sofort verloren – der König fällt immer zuletzt.</p>
+    <button class="cta" id="again">Neue Partie</button>
+    <button class="cta ghost" id="prac">Übungsmodus</button>
+    <div class="brandline">Echtes Wikingerschach für deine Feier: <a href="https://nordend-spieleverleih.de/jetzt-buchen/" target="_blank" rel="noopener">Nordend-Spieleverleih</a></div>`);
+}
+function showCard(html){
+  el.card.innerHTML=html; el.overlay.style.display='flex';
+  const a=$('again'),p=$('prac');
+  if(a)a.onclick=()=>{el.overlay.style.display='none';S.mode='game';el.btnPractice.classList.remove('on');layout();};
+  if(p)p.onclick=()=>{el.overlay.style.display='none';S.mode='practice';el.btnPractice.classList.add('on');layout();};
+}
+
+/* ===================== Aufbau ===================== */
+function layout(){
+  [...kubbs].forEach(k=>{scene.remove(k.mesh);world.removeBody(k.body);}); kubbs.length=0;
+  [...batons].forEach(b=>{scene.remove(b.mesh);world.removeBody(b.body);}); batons.length=0;
+  if(king){scene.remove(king.mesh);world.removeBody(king.body);king=null;}
+  flying=null;
+  for(let i=0;i<5;i++) addKubb(-PITCH_W/2+(PITCH_W/4)*i, FAR_Z, 'base');
+  for(let i=0;i<5;i++) addKubb(-PITCH_W/2+(PITCH_W/4)*i, NEAR_Z, 'own');   // eigene Grundlinie (Deko)
+  addKing();
+  S.throws=0; S.batonsLeft=BATONS_PER_ROUND; S.phase='aiming'; S.roundEnding=false;
+  coachSeen.clear(); coachHide();
+  tip(S.mode==='practice'?'Übungsmodus – keine Feldkubbs, König ungefährlich'
+                         :'Zielen: Maus/Finger aufs Feld · Loslassen zum Werfen');
+  syncHUD();
+}
+
+/* ===================== Buttons ===================== */
+el.btnView.onclick=()=>{S.topView=!S.topView;el.btnView.classList.toggle('on',S.topView);
+  el.btnView.textContent=S.topView?'Wurfsicht':'Draufsicht';};
+el.btnPractice.onclick=()=>{S.mode=S.mode==='practice'?'game':'practice';
+  el.btnPractice.classList.toggle('on',S.mode==='practice');layout();};
+el.btnSound.onclick=()=>{S.sound=!S.sound;el.btnSound.classList.toggle('on',S.sound);
+  el.btnSound.textContent=S.sound?'Ton aus':'Ton an'; if(S.sound){audio();clack(0.18,1);}};
+function coachStart(){
+  setTimeout(()=>coach('start','Los geht’s!',
+    'Du hast <b>6 Wurfhölzer</b> pro Runde. Leg damit die <b>5 hinteren Kubbs</b> nacheinander um. '+
+    'Zielen: mit Maus oder Finger aufs Feld drücken – loslassen wirft.',13),400);
+}
+$('btnFs').onclick=()=>{
+  const t=document.getElementById('kubbApp');
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(t.requestFullscreen){ t.requestFullscreen(); }
+  else if(t.webkitRequestFullscreen){ t.webkitRequestFullscreen(); }
+};
+el.btnReset.onclick=()=>{layout();toast('Neu aufgestellt');coachStart();};
+$('btnStart').onclick=()=>{el.overlay.style.display='none';S.mode='game';layout();coachStart();};
+$('btnStartPractice').onclick=()=>{el.overlay.style.display='none';S.mode='practice';
+  el.btnPractice.classList.add('on');layout();coachStart();};
+
+/* ===================== Schleife ===================== */
+let last=performance.now(),acc=0;
+const FIXED=1/120;
+function syncMesh(o){
+  o.mesh.position.set(o.body.position.x,o.body.position.y,o.body.position.z);
+  o.mesh.quaternion.set(o.body.quaternion.x,o.body.quaternion.y,o.body.quaternion.z,o.body.quaternion.w);
+}
+function tick(now){
+  requestAnimationFrame(tick);
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+
+  acc+=dt; let steps=0;
+  while(acc>=FIXED&&steps<8){ world.step(FIXED); acc-=FIXED; steps++; }
+
+  kubbs.forEach(syncMesh); if(king) syncMesh(king); batons.forEach(syncMesh);
+
+  // Wurfholz in der Hand
+  handPull=Math.max(0,handPull-dt*2.2);
+  const show=(S.phase==='aiming'||S.phase==='flying')&&S.batonsLeft>0;
+  handGroup.visible=show;
+  handGroup.position.set(0.30,-0.26-handPull*0.10,-0.72+handPull*0.22);
+  handGroup.rotation.set(-0.15+handPull*0.5,0.25,-0.55);
+
+  // Kamera
+  if(S.topView){ camDesired.copy(CAM_TOP); lookDesired.set(0,0,0.4); }
+  else if(S.phase==='flying'&&flying){
+    const p=flying.body.position;
+    const prog=Math.min(1,Math.max(0,(NEAR_Z-p.z)/PITCH_L));
+    camDesired.set(CAM_HOME.x+p.x*0.18,CAM_HOME.y+0.06*prog,CAM_HOME.z-prog*2.2);
+    lookDesired.set(p.x*0.55,Math.max(0.12,p.y*0.45),p.z-0.5);
+  } else { camDesired.copy(CAM_HOME); lookDesired.copy(CAM_LOOK); }
+  camera.position.lerp(camDesired,1-Math.pow(0.002,dt));
+  camTarget.lerp(lookDesired,1-Math.pow(0.003,dt));
+  camera.lookAt(camTarget);
+
+  // Wurf beenden
+  if(S.phase==='flying'){
+    settle+=dt;
+    if(settle>0.8&&(asleep()||settle>5.5)){
+      S.phase='settling';
+      setTimeout(()=>{ if(S.phase==='settling') evaluate(); },250);
+    }
+  }
+
+  if(toastT>0){ toastT-=dt; if(toastT<=0) el.toast.classList.remove('show'); }
+  if(coachT>0){ coachT-=dt; if(coachT<=0) coachHide(); }
+
+  renderer.render(scene,camera);
+}
+
+resize();
+layout();
+S.phase='idle';
+el.loading.style.display='none';
+requestAnimationFrame(tick);
+</script>
