@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flitzpuck Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Layout: duel on one screen — scoreboard strip, wooden board, result card overlaid, booking note below */
+  :root{
+    color-scheme: light;
+    --green:#477c6e;
+    --green-dark:#3a685c;
+    --green-light:#6a9c8e;
+    --cream:#f6f2ed;
+    --chip:#e7e1d8;
+    --ink:#2b2b2b;
+    --ink-soft:#6b655d;
+    --brown:#5c3b22;
+    --beige:#c6ab79;
+    --font-ui:'Nunito','Segoe UI',system-ui,Arial,sans-serif;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    padding:18px 16px 36px;
+  }
+  .wrap{max-width:940px;margin:0 auto;}
+
+  header{margin-bottom:14px;}
+  .eyebrow{
+    font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--green-dark);margin:0 0 2px;
+  }
+  h1{
+    font-size:clamp(24px,4.2vw,34px);font-weight:900;margin:0;line-height:1.05;
+    text-wrap:balance;letter-spacing:-.015em;
+  }
+  .tagline{font-size:14.5px;color:var(--ink-soft);margin:4px 0 0;max-width:52ch;line-height:1.45;}
+
+  .hud{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+  .stat{
+    display:flex;align-items:center;gap:8px;
+    background:#fff;border:1.5px solid var(--chip);
+    border-radius:999px;padding:6px 15px;
+  }
+  .stat .k{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .stat .v{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink);min-width:1.1ch;text-align:center;}
+  .dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto;box-shadow:inset 0 -1px 1px rgba(0,0,0,.25),0 1px 1px rgba(0,0,0,.15);}
+  .dot.mine{background:radial-gradient(circle at 34% 30%, #8a6242, #5c3b22 60%, #36200f);}
+  .dot.theirs{background:radial-gradient(circle at 34% 30%, #f4ead3, #ddc9a4 60%, #ab9469);}
+  .stat.lead{border-color:var(--green-light);box-shadow:0 0 0 3px rgba(106,156,142,.18);}
+  .stat.clock.urgent .v{color:#b4452f;}
+  .spacer{flex:1 1 auto;}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{
+    font-weight:800;font-size:14.5px;padding:9px 19px;border-radius:10px;
+    transition:background .15s ease,transform .07s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn:focus-visible{outline:3px solid var(--green-light);outline-offset:2px;}
+  .btn-primary{background:var(--green);color:#fff;box-shadow:0 2px 0 var(--green-dark);}
+  .btn-primary:hover{background:var(--green-dark);box-shadow:0 2px 0 #2d5248;}
+  .btn-ghost{background:transparent;color:var(--green-dark);border:1.5px solid var(--chip);}
+  .btn-ghost:hover{border-color:var(--green-light);background:#fff;}
+
+  .board-shell{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 14px 34px rgba(60,38,16,.26),0 2px 6px rgba(60,38,16,.18);}
+  canvas{display:block;width:100%;height:auto;touch-action:none;}
+
+  .coach{
+    position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+    background:rgba(28,18,8,.76);color:#f7efe4;
+    font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;
+    backdrop-filter:blur(3px);white-space:nowrap;pointer-events:none;
+    transition:opacity .3s ease;max-width:92%;overflow:hidden;text-overflow:ellipsis;
+  }
+  .coach.hide{opacity:0;}
+
+  .flash{
+    position:absolute;left:50%;top:16px;transform:translateX(-50%) translateY(-6px);
+    color:#fff;font-weight:900;font-size:14px;
+    padding:8px 18px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:opacity .22s ease,transform .22s ease;white-space:nowrap;
+    background:rgba(28,18,8,.82);
+  }
+  .flash.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .flash.good{background:rgba(47,143,91,.9);}
+  .flash.bad{background:rgba(180,69,47,.9);}
+
+  .result{
+    position:absolute;inset:0;display:grid;place-items:center;
+    background:rgba(32,20,9,.55);backdrop-filter:blur(4px);
+    opacity:0;pointer-events:none;transition:opacity .28s ease;
+  }
+  .result.show{opacity:1;pointer-events:auto;}
+  .result-card{
+    background:var(--cream);border-radius:18px;padding:26px 30px;text-align:center;
+    max-width:340px;box-shadow:0 18px 40px rgba(0,0,0,.3);
+    transform:scale(.94);transition:transform .28s cubic-bezier(.2,1.4,.5,1);
+  }
+  .result.show .result-card{transform:scale(1);}
+  .result-card .trophy{font-size:34px;line-height:1;margin-bottom:6px;}
+  .result-card h2{margin:0 0 6px;font-size:22px;font-weight:900;}
+  .result-card p{margin:0 0 16px;font-size:14.5px;color:var(--ink-soft);line-height:1.5;}
+  .result-card .score{display:flex;justify-content:center;gap:26px;margin:0 0 18px;}
+  .result-card .score div{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);}
+  .result-card .score strong{display:block;font-size:26px;font-weight:900;color:var(--green-dark);font-variant-numeric:tabular-nums;margin-top:2px;}
+
+  .below{margin-top:22px;display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;}
+  @media (max-width:640px){.below{grid-template-columns:1fr;}}
+  .rules,.cta{background:#fff;border:1.5px solid var(--chip);border-radius:var(--radius);padding:18px 20px;}
+  .rules h3,.cta h3{margin:0 0 9px;font-size:15px;font-weight:900;letter-spacing:-.01em;}
+  .rules ol{margin:0;padding-left:19px;font-size:14px;line-height:1.65;color:var(--ink-soft);}
+  .rules li::marker{color:var(--green);font-weight:800;}
+  .cta p{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--ink-soft);}
+  .cta a{display:inline-block;text-decoration:none;}
+  footer{margin-top:20px;font-size:12px;color:#938c83;text-align:center;}
+
+  @media (prefers-reduced-motion:reduce){ *{transition-duration:.01ms !important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Nordend-Spieleverleih &middot; Spiel zum Antesten</p>
+    <h1>Flitzpuck Arena</h1>
+    <p class="tagline">Duell gegen den Computer: Wer zuerst die eigene H&auml;lfte leer hat, gewinnt. Du spielst links mit den dunklen Pucks, der Gegner rechts mit den hellen &mdash; und schie&szlig;t gleichzeitig zur&uuml;ck.</p>
+  </header>
+
+  <div class="hud">
+    <div class="stat" id="statMe"><span class="dot mine"></span><span class="k">Deine Seite</span><span class="v" id="sMe">4</span></div>
+    <div class="stat" id="statAi"><span class="dot theirs"></span><span class="k">Gegner</span><span class="v" id="sAi">4</span></div>
+    <div class="stat clock" id="statClock"><span class="k">Zeit</span><span class="v" id="sTime">1:40</span></div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" id="btnReset">Neue Runde</button>
+  </div>
+
+  <div class="board-shell">
+    <canvas id="board" width="920" height="552"></canvas>
+    <div class="coach" id="coach">Zieh den Puck nach links ins Gummiband und lass los</div>
+    <div class="flash" id="flash"></div>
+    <div class="result" id="result">
+      <div class="result-card">
+        <div class="trophy" id="rIcon">&#127881;</div>
+        <h2 id="rTitle">Gewonnen!</h2>
+        <p id="rText">Beim echten Flitzpuck sitzt dir dabei jemand gegen&uuml;ber.</p>
+        <div class="score">
+          <div>Deine Seite<strong id="rMe">0</strong></div>
+          <div>Gegner<strong id="rAi">8</strong></div>
+        </div>
+        <button class="btn btn-primary" id="btnAgain">Noch eine Runde</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="below">
+    <div class="rules">
+      <h3>So geht's</h3>
+      <ol>
+        <li>Dein Gummiband ist hinten auf deiner H&auml;lfte gespannt. Der n&auml;chste Puck legt sich von selbst daran an.</li>
+        <li>Mit Maus oder Finger nach links ziehen &mdash; weiter ziehen hei&szlig;t mehr Wucht, nach oben oder unten ziehen &auml;ndert den Winkel. Loslassen schie&szlig;t.</li>
+        <li>Der Puck muss durch den Tunnel in der Mittelwand. Was auf deiner Seite landet, musst du schie&szlig;en &mdash; auch die hellen Pucks des Gegners.</li>
+        <li>Leere H&auml;lfte gewinnt. L&auml;uft die Zeit ab, gewinnt wer weniger Pucks auf seiner Seite hat.</li>
+      </ol>
+    </div>
+    <div class="cta">
+      <h3>Lieber in echt spielen?</h3>
+      <p>Flitzpuck ist eins von 12 Spielen, die du bei uns mieten kannst &mdash; abholen oder liefern lassen, f&uuml;r Kindergeburtstag, Gartenparty oder Firmenfeier.</p>
+      <a class="btn btn-primary" href="https://nordend-spieleverleih.de/jetzt-buchen/" target="_blank" rel="noopener">Spiele buchen</a>
+    </div>
+  </div>
+
+  <footer>Ein kleines Browserspiel von nordend-spieleverleih.de</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('board');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  // ---- geometry -------------------------------------------------------
+  var FRAME = 24;
+  var PL = { x0: FRAME, y0: FRAME, x1: W - FRAME, y1: H - FRAME };
+  var CX = Math.round(W / 2), CY = Math.round(H / 2);
+  var WALL_HALF = 16;                        // thick wall: the opening is a tunnel through it
+  var WALL = { left: CX - WALL_HALF, right: CX + WALL_HALF };
+  var GAP_HALF = 54;
+  var GAP = { top: CY - GAP_HALF, bottom: CY + GAP_HALF };
+  var R = 19;
+  var MY_BAND = PL.x0 + 128;                 // your band, strung between the rails
+  var AI_BAND = PL.x1 - 128;                 // the opponent's band
+  var MAX_PULL = 116;
+  var MAX_SPEED = 1700;
+  var PIN_R = 6;
+  var ROUND_MS = 100000;                     // 1:40 per round
+
+  var me = { band: MY_BAND, load: { x: MY_BAND + R + 3, y: CY }, sign: 1, loaded: null };
+  var op = { band: AI_BAND, load: { x: AI_BAND - R - 3, y: CY }, sign: -1, loaded: null };
+
+  // ---- state ----------------------------------------------------------
+  var pucks = [], drag = null;
+  var started = false, finished = false;
+  var leftMs = ROUND_MS;
+  var clearMe = 0, clearAi = 0;
+  var confetti = [];
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var ai = { phase: 'wait', t: 0, dur: 1.1, pull: 0, pullTo: 0, aimY: CY };
+
+  // four each, clear of the firing lane at mid height
+  var START = [
+    { x: 252, y: 112, skin: 'dark' },
+    { x: 342, y: 176, skin: 'dark' },
+    { x: 252, y: 340, skin: 'dark' },
+    { x: 342, y: 404, skin: 'dark' },
+    { x: 668, y: 112, skin: 'beige' },
+    { x: 578, y: 176, skin: 'beige' },
+    { x: 668, y: 340, skin: 'beige' },
+    { x: 578, y: 404, skin: 'beige' }
+  ];
+
+  var SKINS = {
+    dark:  { top: '#966b47', mid: '#5c3b22', low: '#301c0d', rim: 'rgba(255,226,190,.34)' },
+    beige: { top: '#fbf4e4', mid: '#ddc9a4', low: '#9d8459', rim: 'rgba(255,255,255,.5)' }
+  };
+
+  function reset(){
+    pucks = START.map(function(s, i){
+      return { x: s.x, y: s.y, vx: 0, vy: 0, skin: s.skin, id: i };
+    });
+    me.loaded = null; op.loaded = null; drag = null;
+    started = false; finished = false;
+    leftMs = ROUND_MS;
+    clearMe = 0; clearAi = 0;
+    confetti = [];
+    ai.phase = 'wait'; ai.t = 0; ai.dur = 1.1; ai.pull = 0;
+    document.getElementById('result').classList.remove('show');
+    document.getElementById('coach').classList.remove('hide');
+    loadMine();
+    updateHud();
+  }
+
+  function sideOf(p){ return p.x < CX ? 'me' : 'ai'; }
+  function atRest(p){ return p.vx === 0 && p.vy === 0; }
+
+  function countSide(which){
+    var n = 0;
+    for (var i = 0; i < pucks.length; i++) if (sideOf(pucks[i]) === which) n++;
+    return n;
+  }
+
+  // your next puck slides onto your band by itself
+  function loadMine(){
+    if (me.loaded || finished) return;
+    var cand = null, stuck = null;
+    for (var i = 0; i < pucks.length; i++){
+      var p = pucks[i];
+      if (p === op.loaded) continue;
+      if (sideOf(p) !== 'me' || !atRest(p)) continue;
+      if (p.x < WALL.left){ if (!cand || p.x < cand.x) cand = p; }
+      else stuck = p;                                   // resting inside the tunnel
+    }
+    if (cand){
+      me.loaded = cand;
+      me.load.y = CY + (Math.random() * 2 - 1) * 34;    // the puck lies somewhere along the band, so you have to aim
+      return;
+    }
+    if (stuck) stuck.vx = 170;                          // let it roll on through
+  }
+
+  // ---- wood textures (generated once) ---------------------------------
+  function makeWood(w, h, base, grainCol, lines, noise){
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var g = c.getContext('2d');
+    var lin = g.createLinearGradient(0, 0, w, h);
+    lin.addColorStop(0, base[0]); lin.addColorStop(0.5, base[1]); lin.addColorStop(1, base[2]);
+    g.fillStyle = lin; g.fillRect(0, 0, w, h);
+
+    g.lineCap = 'round';
+    for (var i = 0; i < lines; i++){
+      var y = Math.random() * h;
+      var amp = 4 + Math.random() * 16;
+      var freq = 0.004 + Math.random() * 0.01;
+      var ph = Math.random() * Math.PI * 2;
+      g.strokeStyle = grainCol;
+      g.globalAlpha = 0.03 + Math.random() * 0.09;
+      g.lineWidth = 0.6 + Math.random() * 2.6;
+      g.beginPath();
+      for (var x = 0; x <= w; x += 7){
+        var yy = y + Math.sin(x * freq + ph) * amp;
+        if (x === 0) g.moveTo(x, yy); else g.lineTo(x, yy);
+      }
+      g.stroke();
+    }
+    g.globalAlpha = 1;
+
+    for (var k = 0; k < 3; k++){
+      var kx = Math.random() * w, ky = Math.random() * h;
+      var rg = g.createRadialGradient(kx, ky, 1, kx, ky, 16 + Math.random() * 14);
+      rg.addColorStop(0, 'rgba(70,40,16,.30)');
+      rg.addColorStop(1, 'rgba(70,40,16,0)');
+      g.fillStyle = rg;
+      g.beginPath(); g.arc(kx, ky, 30, 0, Math.PI * 2); g.fill();
+    }
+
+    if (noise){
+      var img = g.getImageData(0, 0, w, h), d = img.data;
+      for (var n = 0; n < d.length; n += 4){
+        var v = (Math.random() - 0.5) * 16;
+        d[n] += v; d[n + 1] += v; d[n + 2] += v;
+      }
+      g.putImageData(img, 0, 0);
+    }
+    return c;
+  }
+
+  var woodField = makeWood(W, H, ['#c08a4e', '#b07c42', '#a97439'], '#6d4418', 170, true);
+  var woodRail  = makeWood(W, H, ['#7c4f24', '#6b421d', '#5c3818'], '#2f1b08', 90, false);
+
+  // logo branded into the wood on each half
+  var logoDark = new Image(), logoLight = new Image();
+  var logoReady = 0;
+  function onLogo(){ logoReady++; if (logoReady === 2) buildBoardLayer(); }
+  logoDark.onload = onLogo;
+  logoLight.onload = onLogo;
+  logoDark.crossOrigin = 'anonymous'; logoDark.src = 'https://raw.githubusercontent.com/Nordend-Spieleverleih/shop-bilder/97ffe398051e15873c03b89c41e52db2297f518f/logo/nordend-spieleverleih_schwarz-transparent.png';
+  logoLight.crossOrigin = 'anonymous'; logoLight.src = 'https://raw.githubusercontent.com/Nordend-Spieleverleih/shop-bilder/97ffe398051e15873c03b89c41e52db2297f518f/logo/nordend-spieleverleih_weiss-transparent.png';
+  var LOGO_W = 230, LOGO_H = Math.round(230 * 578 / 1792);
+  var LOGO_SPOTS = [{ x: 300, y: 470 }, { x: W - 300, y: 470 }];
+
+  // ---- physics --------------------------------------------------------
+  var FRICTION = 1.35, RESTITUTION = 0.72, BAND_BOUNCE = 0.45, STOP = 7;
+
+  function stepPhysics(dt){
+    var i, j, p;
+    var damp = Math.exp(-FRICTION * dt);
+
+    for (i = 0; i < pucks.length; i++){
+      p = pucks[i];
+      if (p === op.loaded) continue;                     // driven by the opponent routine
+
+      if (p === me.loaded){
+        if (!drag){
+          var k = Math.min(1, dt * 9);
+          p.x += (me.load.x - p.x) * k;
+          p.y += (me.load.y - p.y) * k;
+          p.vx = 0; p.vy = 0;
+        }
+        continue;
+      }
+
+      var wasSide = sideOf(p);
+
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= damp; p.vy *= damp;
+      if (Math.abs(p.vx) < STOP && Math.abs(p.vy) < STOP){ p.vx = 0; p.vy = 0; }
+
+      if (p.x - R < PL.x0){ p.x = PL.x0 + R; p.vx = -p.vx * RESTITUTION; }
+      if (p.x + R > PL.x1){ p.x = PL.x1 - R; p.vx = -p.vx * RESTITUTION; }
+      if (p.y - R < PL.y0){ p.y = PL.y0 + R; p.vy = -p.vy * RESTITUTION; }
+      if (p.y + R > PL.y1){ p.y = PL.y1 - R; p.vy = -p.vy * RESTITUTION; }
+
+      collideRect(p, WALL.left, PL.y0, WALL.right, GAP.top);
+      collideRect(p, WALL.left, GAP.bottom, WALL.right, PL.y1);
+
+      // both elastic bands are soft obstacles
+      if (p.vx < 0 && p.x > me.band && p.x - R < me.band){
+        p.x = me.band + R; p.vx = -p.vx * BAND_BOUNCE;
+      }
+      if (p.vx > 0 && p.x < op.band && p.x + R > op.band){
+        p.x = op.band - R; p.vx = -p.vx * BAND_BOUNCE;
+      }
+
+      var nowSide = sideOf(p);
+      if (nowSide !== wasSide){
+        if (nowSide === 'ai'){
+          flash('Durch den Tunnel!', 'good');
+          burst(p.x, p.y);
+        } else {
+          flash('Der Gegner kontert', 'bad');
+        }
+      }
+    }
+
+    for (i = 0; i < pucks.length; i++){
+      for (j = i + 1; j < pucks.length; j++) resolvePair(pucks[i], pucks[j]);
+    }
+  }
+
+  function collideRect(p, rx0, ry0, rx1, ry1){
+    var nx = Math.max(rx0, Math.min(p.x, rx1));
+    var ny = Math.max(ry0, Math.min(p.y, ry1));
+    var dx = p.x - nx, dy = p.y - ny;
+    var d2 = dx * dx + dy * dy;
+    if (d2 >= R * R) return;
+    var d = Math.sqrt(d2);
+    if (d < 0.0001){
+      var toL = Math.abs(p.x - rx0), toR = Math.abs(rx1 - p.x);
+      var toT = Math.abs(p.y - ry0), toB = Math.abs(ry1 - p.y);
+      var m = Math.min(toL, toR, toT, toB);
+      if (m === toL){ p.x = rx0 - R; p.vx = -Math.abs(p.vx) * RESTITUTION; }
+      else if (m === toR){ p.x = rx1 + R; p.vx = Math.abs(p.vx) * RESTITUTION; }
+      else if (m === toT){ p.y = ry0 - R; p.vy = -Math.abs(p.vy) * RESTITUTION; }
+      else { p.y = ry1 + R; p.vy = Math.abs(p.vy) * RESTITUTION; }
+      return;
+    }
+    var ux = dx / d, uy = dy / d;
+    p.x = nx + ux * R; p.y = ny + uy * R;
+    var vn = p.vx * ux + p.vy * uy;
+    if (vn < 0){
+      p.vx -= (1 + RESTITUTION) * vn * ux;
+      p.vy -= (1 + RESTITUTION) * vn * uy;
+    }
+  }
+
+  function resolvePair(a, b){
+    if (a === me.loaded || b === me.loaded || a === op.loaded || b === op.loaded) return;
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d >= R * 2 || d < 0.0001) return;
+    var ux = dx / d, uy = dy / d;
+    var overlap = (R * 2 - d) / 2;
+    a.x -= ux * overlap; a.y -= uy * overlap;
+    b.x += ux * overlap; b.y += uy * overlap;
+    var rel = (b.vx - a.vx) * ux + (b.vy - a.vy) * uy;
+    if (rel > 0) return;
+    var imp = -(1 + 0.86) * rel / 2;
+    a.vx -= imp * ux; a.vy -= imp * uy;
+    b.vx += imp * ux; b.vy += imp * uy;
+  }
+
+  // ---- the opponent ---------------------------------------------------
+  function stepAi(dt){
+    if (!started || finished) return;
+    ai.t += dt;
+
+    if (ai.phase === 'wait'){
+      if (ai.t < ai.dur) return;
+      var cand = null, stuck = null;
+      for (var i = 0; i < pucks.length; i++){
+        var p = pucks[i];
+        if (p === me.loaded) continue;
+        if (sideOf(p) !== 'ai' || !atRest(p)) continue;
+        if (p.x > WALL.right){ if (!cand || p.x > cand.x) cand = p; }
+        else stuck = p;
+      }
+      if (!cand){
+        if (stuck) stuck.vx = -170;
+        ai.t = 0; ai.dur = 0.4;
+        return;
+      }
+      op.loaded = cand;
+      op.load.y = CY + (Math.random() * 2 - 1) * 26;
+      ai.phase = 'home'; ai.t = 0;
+      return;
+    }
+
+    if (ai.phase === 'home'){
+      var q = op.loaded;
+      if (!q){ ai.phase = 'wait'; ai.t = 0; ai.dur = 0.5; return; }
+      var k = Math.min(1, dt * 9);
+      q.x += (op.load.x - q.x) * k;
+      q.y += (op.load.y - q.y) * k;
+      q.vx = 0; q.vy = 0;
+      if (Math.abs(q.x - op.load.x) < 1.5 && Math.abs(q.y - op.load.y) < 1.5){
+        q.x = op.load.x; q.y = op.load.y;
+        ai.phase = 'aim'; ai.t = 0;
+        ai.dur = 0.40 + Math.random() * 0.36;
+        ai.pullTo = 0.58 + Math.random() * 0.42;
+        ai.aimY = CY + (Math.random() * 2 - 1) * 50;     // the miss comes from here
+      }
+      return;
+    }
+
+    if (ai.phase === 'aim'){
+      var r = op.loaded;
+      if (!r){ ai.phase = 'wait'; ai.t = 0; ai.dur = 0.5; return; }
+      var prog = Math.min(1, ai.t / ai.dur);
+      var e = prog * prog * (3 - 2 * prog);
+      ai.pull = ai.pullTo * e;
+      var dx = CX - op.load.x, dy = ai.aimY - op.load.y;
+      var L = Math.sqrt(dx * dx + dy * dy);
+      var ux = dx / L, uy = dy / L;
+      r.x = op.load.x - ux * ai.pull * MAX_PULL;
+      r.y = Math.max(PL.y0 + R + 6, Math.min(PL.y1 - R - 6, op.load.y - uy * ai.pull * MAX_PULL));
+      if (prog >= 1){
+        var speed = 840 + ai.pullTo * 800;
+        r.vx = ux * speed; r.vy = uy * speed;
+        op.loaded = null; ai.pull = 0;
+        ai.phase = 'wait'; ai.t = 0;
+        ai.dur = 0.45 + Math.random() * 0.6;
+      }
+    }
+  }
+
+  // ---- drawing --------------------------------------------------------
+  function roundRect(c, x, y, w, h, r){
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  // the board never changes, so it is rendered once into its own layer
+  var boardLayer = document.createElement('canvas');
+  boardLayer.width = W; boardLayer.height = H;
+
+  function buildBoardLayer(){
+    var ctx = boardLayer.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(woodRail, 0, 0);
+
+    ctx.save();
+    roundRect(ctx, PL.x0, PL.y0, PL.x1 - PL.x0, PL.y1 - PL.y0, 8);
+    ctx.clip();
+    ctx.drawImage(woodField, 0, 0);
+
+    // branded logo, burned into the surface of each half
+    if (logoReady === 2){
+      for (var i = 0; i < LOGO_SPOTS.length; i++){
+        var s = LOGO_SPOTS[i];
+        var lx = s.x - LOGO_W / 2, ly = s.y - LOGO_H / 2;
+        ctx.globalAlpha = 0.32;
+        ctx.drawImage(logoDark, lx, ly + 1.5, LOGO_W, LOGO_H);
+        ctx.globalAlpha = 0.14;
+        ctx.drawImage(logoLight, lx, ly - 1, LOGO_W, LOGO_H);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    var vg = ctx.createRadialGradient(CX, CY, H * 0.18, CX, CY, H * 0.78);
+    vg.addColorStop(0, 'rgba(255,240,215,.14)');
+    vg.addColorStop(1, 'rgba(40,22,6,.28)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(PL.x0, PL.y0, PL.x1 - PL.x0, PL.y1 - PL.y0);
+    ctx.restore();
+
+    ctx.save();
+    roundRect(ctx, PL.x0, PL.y0, PL.x1 - PL.x0, PL.y1 - PL.y0, 8);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(38,20,4,.5)';
+    ctx.lineWidth = 10;
+    ctx.filter = 'blur(5px)';
+    roundRect(ctx, PL.x0, PL.y0, PL.x1 - PL.x0, PL.y1 - PL.y0, 8);
+    ctx.stroke();
+    ctx.filter = 'none';
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255,222,180,.22)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, 3, 3, W - 6, H - 6, 16);
+    ctx.stroke();
+
+    // who owns which half
+    ctx.save();
+    ctx.font = '800 11.5px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,238,210,.42)';
+    ctx.fillText('D E I N E   S E I T E', (PL.x0 + WALL.left) / 2, PL.y0 + 22);
+    ctx.fillText('G E G N E R', (WALL.right + PL.x1) / 2, PL.y0 + 22);
+    ctx.restore();
+
+    drawWall(ctx);
+  }
+
+  function drawWall(ctx){
+    var th = WALL.right - WALL.left;
+
+    ctx.save();
+    ctx.fillStyle = '#8d6033';
+    ctx.fillRect(WALL.left, GAP.top, th, GAP.bottom - GAP.top);
+    var gTop = ctx.createLinearGradient(0, GAP.top, 0, GAP.top + 26);
+    gTop.addColorStop(0, 'rgba(26,13,2,.6)');
+    gTop.addColorStop(1, 'rgba(26,13,2,0)');
+    ctx.fillStyle = gTop;
+    ctx.fillRect(WALL.left, GAP.top, th, 26);
+    var gBot = ctx.createLinearGradient(0, GAP.bottom, 0, GAP.bottom - 26);
+    gBot.addColorStop(0, 'rgba(26,13,2,.6)');
+    gBot.addColorStop(1, 'rgba(26,13,2,0)');
+    ctx.fillStyle = gBot;
+    ctx.fillRect(WALL.left, GAP.bottom - 26, th, 26);
+    var gEnd = ctx.createLinearGradient(WALL.left, 0, WALL.left + 9, 0);
+    gEnd.addColorStop(0, 'rgba(26,13,2,.3)');
+    gEnd.addColorStop(1, 'rgba(26,13,2,0)');
+    ctx.fillStyle = gEnd;
+    ctx.fillRect(WALL.left, GAP.top, 9, GAP.bottom - GAP.top);
+    var gEnd2 = ctx.createLinearGradient(WALL.right, 0, WALL.right - 9, 0);
+    gEnd2.addColorStop(0, 'rgba(26,13,2,.3)');
+    gEnd2.addColorStop(1, 'rgba(26,13,2,0)');
+    ctx.fillStyle = gEnd2;
+    ctx.fillRect(WALL.right - 9, GAP.top, 9, GAP.bottom - GAP.top);
+    ctx.restore();
+
+    var segs = [[PL.y0, GAP.top], [GAP.bottom, PL.y1]];
+    for (var i = 0; i < segs.length; i++){
+      var y0 = segs[i][0], y1 = segs[i][1];
+      ctx.save();
+      ctx.shadowColor = 'rgba(30,16,4,.55)';
+      ctx.shadowBlur = 13;
+      ctx.shadowOffsetY = i === 0 ? 3 : -3;
+      var g = ctx.createLinearGradient(WALL.left, 0, WALL.right, 0);
+      g.addColorStop(0, '#4d2e18');
+      g.addColorStop(0.3, '#744a26');
+      g.addColorStop(0.55, '#6a4322');
+      g.addColorStop(0.8, '#55341a');
+      g.addColorStop(1, '#3a2210');
+      ctx.fillStyle = g;
+      roundRect(ctx, WALL.left, y0, WALL.right - WALL.left, y1 - y0, 4);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(255,218,172,.26)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      var lipY = i === 0 ? y1 - 1 : y0 + 1;
+      ctx.moveTo(WALL.left + 2, lipY);
+      ctx.lineTo(WALL.right - 2, lipY);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,214,166,.16)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(WALL.left + 1.5, y0 + 3);
+      ctx.lineTo(WALL.left + 1.5, y1 - 3);
+      ctx.stroke();
+    }
+  }
+
+  function drawBand(player){
+    var x = player.band;
+    var topY = PL.y0 + 1, botY = PL.y1 - 1;
+    var mx = x, my = CY;
+    var p = player.loaded;
+    if (p){
+      mx = player.sign > 0 ? Math.min(x, p.x - R) : Math.max(x, p.x + R);
+      my = p.y;
+    }
+    var stretch = Math.min(1, Math.abs(x - mx) / MAX_PULL);
+    var off = player.sign > 0 ? 3 : -3;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.strokeStyle = 'rgba(30,16,4,.34)';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(x + off, topY); ctx.lineTo(mx + off, my + 3); ctx.lineTo(x + off, botY);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#2a2521';
+    ctx.lineWidth = 6.4 - stretch * 2.2;
+    ctx.beginPath();
+    ctx.moveTo(x, topY); ctx.lineTo(mx, my); ctx.lineTo(x, botY);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.16 + stretch * 0.2) + ')';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x - 1.4, topY); ctx.lineTo(mx - 1.4, my); ctx.lineTo(x - 1.4, botY);
+    ctx.stroke();
+    ctx.restore();
+
+    [topY, botY].forEach(function(py){
+      ctx.save();
+      ctx.shadowColor = 'rgba(20,10,0,.6)';
+      ctx.shadowBlur = 6;
+      var rg = ctx.createRadialGradient(x - 2, py - 2.5, 0.5, x, py, PIN_R);
+      rg.addColorStop(0, '#ffe7ab');
+      rg.addColorStop(0.5, '#c9a24a');
+      rg.addColorStop(1, '#7d5f1d');
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(x, py, PIN_R, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawPuck(p){
+    var s = SKINS[p.skin];
+
+    ctx.save();
+    var sh = ctx.createRadialGradient(p.x + 2.5, p.y + 5, R * 0.45, p.x + 2.5, p.y + 5, R * 1.25);
+    sh.addColorStop(0, 'rgba(28,14,2,.42)');
+    sh.addColorStop(0.7, 'rgba(28,14,2,.22)');
+    sh.addColorStop(1, 'rgba(28,14,2,0)');
+    ctx.fillStyle = sh;
+    ctx.beginPath();
+    ctx.ellipse(p.x + 2.5, p.y + 5, R * 1.25, R * 1.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    var g = ctx.createRadialGradient(p.x - R * 0.34, p.y - R * 0.42, R * 0.12, p.x, p.y, R);
+    g.addColorStop(0, s.top); g.addColorStop(0.55, s.mid); g.addColorStop(1, s.low);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = s.rim;
+    ctx.lineWidth = 1.7;
+    ctx.beginPath(); ctx.arc(p.x, p.y, R - 1, Math.PI * 0.85, Math.PI * 1.95); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, R - 1, Math.PI * 1.95, Math.PI * 0.85); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,.14)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, R * 0.42, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.1)';
+    ctx.beginPath(); ctx.arc(p.x, p.y - 0.8, R * 0.3, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = p.skin === 'dark' ? 'rgba(255,235,205,.4)' : 'rgba(255,255,255,.62)';
+    ctx.beginPath(); ctx.ellipse(p.x - R * 0.36, p.y - R * 0.44, R * 0.2, R * 0.13, -0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    if (p === me.loaded && !drag && !finished){
+      var t = (Date.now() % 1600) / 1600;
+      var pulse = reduceMotion ? 0.45 : 0.3 + Math.sin(t * Math.PI * 2) * 0.22;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,245,225,' + pulse + ')';
+      ctx.lineWidth = 2.2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.arc(p.x, p.y, R + 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawAim(){
+    if (!me.loaded || !drag) return;
+    var dx = me.load.x - me.loaded.x, dy = me.load.y - me.loaded.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 4) return;
+    var power = Math.min(1, len / MAX_PULL);
+    var ux = dx / len, uy = dy / len;
+
+    ctx.save();
+    ctx.setLineDash([10, 9]);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,248,232,' + (0.3 + power * 0.42) + ')';
+    ctx.beginPath();
+    ctx.moveTo(me.loaded.x + ux * (R + 4), me.loaded.y + uy * (R + 4));
+    ctx.lineTo(me.loaded.x + ux * (R + 4 + 170 * power), me.loaded.y + uy * (R + 4 + 170 * power));
+    ctx.stroke();
+    ctx.restore();
+
+    var mw = 74, mh = 7;
+    var mx = me.loaded.x - mw / 2, my = me.loaded.y + R + 15;
+    ctx.save();
+    roundRect(ctx, mx, my, mw, mh, 3.5);
+    ctx.fillStyle = 'rgba(22,12,2,.52)'; ctx.fill();
+    roundRect(ctx, mx + 1, my + 1, (mw - 2) * power, mh - 2, 2.5);
+    ctx.fillStyle = power > 0.86 ? '#e8b44a' : '#9ad3bf';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawConfetti(){
+    for (var i = 0; i < confetti.length; i++){
+      var c = confetti[i];
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, c.life);
+      ctx.translate(c.x, c.y);
+      ctx.rotate(c.rot);
+      ctx.fillStyle = c.col;
+      ctx.fillRect(-c.s / 2, -c.s / 2, c.s, c.s * 0.6);
+      ctx.restore();
+    }
+  }
+
+  function render(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(boardLayer, 0, 0);
+    drawBand(me);
+    drawBand(op);
+    for (var i = 0; i < pucks.length; i++){
+      var p = pucks[i];
+      if (p !== me.loaded && p !== op.loaded) drawPuck(p);
+    }
+    if (op.loaded) drawPuck(op.loaded);
+    if (me.loaded) drawPuck(me.loaded);
+    drawAim();
+    drawConfetti();
+  }
+
+  // ---- effects --------------------------------------------------------
+  var flashTimer = null;
+  function flash(text, kind){
+    var el = document.getElementById('flash');
+    el.innerHTML = text;
+    el.className = 'flash show' + (kind ? ' ' + kind : '');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function(){ el.className = 'flash' + (kind ? ' ' + kind : ''); }, 950);
+  }
+
+  function burst(x, y){
+    if (reduceMotion) return;
+    var cols = ['#e8b44a', '#6ba596', '#f6f2ed', '#2f8f5b'];
+    for (var i = 0; i < 14; i++){
+      confetti.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 300,
+        vy: (Math.random() - 0.5) * 300 - 40,
+        s: 4 + Math.random() * 5,
+        rot: Math.random() * 6.28,
+        vr: (Math.random() - 0.5) * 12,
+        col: cols[(Math.random() * cols.length) | 0],
+        life: 1
+      });
+    }
+  }
+
+  function stepConfetti(dt){
+    for (var i = confetti.length - 1; i >= 0; i--){
+      var c = confetti[i];
+      c.x += c.vx * dt; c.y += c.vy * dt;
+      c.vy += 420 * dt; c.vx *= 0.98;
+      c.rot += c.vr * dt;
+      c.life -= dt * 1.1;
+      if (c.life <= 0) confetti.splice(i, 1);
+    }
+  }
+
+  // ---- input ----------------------------------------------------------
+  function toBoard(e){
+    var r = canvas.getBoundingClientRect();
+    var pt = e.touches && e.touches.length ? e.touches[0] : e;
+    return {
+      x: (pt.clientX - r.left) * (W / r.width),
+      y: (pt.clientY - r.top) * (H / r.height)
+    };
+  }
+
+  function onDown(e){
+    if (finished || !me.loaded) return;
+    var p = toBoard(e);
+    var dx = p.x - me.loaded.x, dy = p.y - me.loaded.y;
+    if (dx * dx + dy * dy > (R + 26) * (R + 26)) return;
+    e.preventDefault();
+    drag = p;
+    document.getElementById('coach').classList.add('hide');
+  }
+
+  function onMove(e){
+    if (!drag || !me.loaded) return;
+    e.preventDefault();
+    var p = toBoard(e);
+    drag = p;
+    var dx = p.x - me.load.x, dy = p.y - me.load.y;
+    if (dx > 0) dx = 0;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d > MAX_PULL){ dx *= MAX_PULL / d; dy *= MAX_PULL / d; }
+    me.loaded.x = Math.max(PL.x0 + R, me.load.x + dx);
+    me.loaded.y = Math.max(PL.y0 + R + 8, Math.min(PL.y1 - R - 8, me.load.y + dy));
+  }
+
+  function onUp(e){
+    if (!drag || !me.loaded) return;
+    e.preventDefault();
+    var dx = me.load.x - me.loaded.x, dy = me.load.y - me.loaded.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    drag = null;
+    if (len < 10) return;
+    var power = Math.min(1, len / MAX_PULL);
+    var speed = 380 + power * (MAX_SPEED - 380);
+    me.loaded.vx = (dx / len) * speed;
+    me.loaded.vy = (dy / len) * speed;
+    me.loaded = null;
+    if (!started){ started = true; }
+    updateHud();
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+  window.addEventListener('touchcancel', onUp);
+
+  document.getElementById('btnReset').addEventListener('click', reset);
+  document.getElementById('btnAgain').addEventListener('click', reset);
+
+  // ---- hud / end ------------------------------------------------------
+  function fmtTime(ms){
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function updateHud(){
+    var cm = countSide('me'), ca = countSide('ai');
+    document.getElementById('sMe').textContent = cm;
+    document.getElementById('sAi').textContent = ca;
+    document.getElementById('sTime').textContent = fmtTime(leftMs);
+    document.getElementById('statMe').classList.toggle('lead', cm < ca);
+    document.getElementById('statAi').classList.toggle('lead', ca < cm);
+    document.getElementById('statClock').classList.toggle('urgent', started && leftMs < 15000);
+  }
+
+  function endRound(kind){
+    if (finished) return;
+    finished = true;
+    me.loaded = null; op.loaded = null; drag = null;
+    var cm = countSide('me'), ca = countSide('ai');
+    document.getElementById('rMe').textContent = cm;
+    document.getElementById('rAi').textContent = ca;
+    var icon = document.getElementById('rIcon');
+    var title = document.getElementById('rTitle');
+    var text = document.getElementById('rText');
+
+    if (kind === 'win'){
+      icon.innerHTML = '&#127881;';
+      title.textContent = 'Gewonnen!';
+      text.textContent = 'Deine Seite ist leer, bevor der Gegner nachlegen konnte.';
+      if (!reduceMotion){
+        for (var i = 0; i < 5; i++) burst(PL.x0 + 80 + Math.random() * (W - 160), PL.y0 + 60 + Math.random() * (H - 180));
+      }
+    } else if (kind === 'lose'){
+      icon.innerHTML = '&#128533;';
+      title.textContent = 'Der Gegner war schneller';
+      text.textContent = 'Seine Hälfte ist leer. Noch eine Runde?';
+    } else if (kind === 'timeWin'){
+      icon.innerHTML = '&#9201;';
+      title.textContent = 'Nach Punkten gewonnen';
+      text.textContent = 'Zeit abgelaufen – du hattest weniger Pucks auf deiner Seite.';
+    } else if (kind === 'timeLose'){
+      icon.innerHTML = '&#9201;';
+      title.textContent = 'Nach Punkten verloren';
+      text.textContent = 'Zeit abgelaufen – der Gegner hatte weniger Pucks auf seiner Seite.';
+    } else {
+      icon.innerHTML = '&#129309;';
+      title.textContent = 'Unentschieden';
+      text.textContent = 'Zeit abgelaufen, auf beiden Seiten liegt gleich viel.';
+    }
+    document.getElementById('result').classList.add('show');
+    updateHud();
+  }
+
+  function checkEnd(dt){
+    if (finished) return;
+    var cm = countSide('me'), ca = countSide('ai');
+    clearMe = cm === 0 ? clearMe + dt : 0;
+    clearAi = ca === 0 ? clearAi + dt : 0;
+    if (clearMe > 0.45){ endRound('win'); return; }
+    if (clearAi > 0.45){ endRound('lose'); return; }
+    if (started && leftMs <= 0){
+      endRound(cm < ca ? 'timeWin' : (ca < cm ? 'timeLose' : 'draw'));
+    }
+  }
+
+  // ---- loop -----------------------------------------------------------
+  var last = 0;
+  function frame(ts){
+    if (!last) last = ts;
+    var dt = Math.min((ts - last) / 1000, 0.033);
+    last = ts;
+
+    if (!finished){
+      if (started) leftMs = Math.max(0, leftMs - dt * 1000);
+      stepPhysics(dt);
+      stepAi(dt);
+      if (!me.loaded) loadMine();
+      checkEnd(dt);
+    }
+    stepConfetti(dt);
+
+    updateHud();
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  buildBoardLayer();
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
