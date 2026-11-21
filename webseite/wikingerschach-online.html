@@ -11,16 +11,11 @@
 .nsvk h1{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:900;line-height:1.08;margin:0 0 .3em;}
 .nsvk h2{font-size:clamp(1.3rem,2.4vw,1.7rem);font-weight:800;margin:0 0 .5em;}
 .nsvk .tagline{color:var(--mut);font-size:1.02rem;margin:0 0 20px;max-width:56ch;}
-.nsvk .stagewrap{margin:0 0 14px;}
+.nsvk .stagewrap{margin:0;}
 #kubbApp{position:relative;width:100%;aspect-ratio:16/9;max-height:min(74vh,660px);min-height:360px;
   border-radius:18px;overflow:hidden;background:#b9d2e6;box-shadow:0 10px 30px rgba(0,0,0,.14);}
 #kubbApp:fullscreen{border-radius:0;max-height:none;aspect-ratio:auto;height:100%;}
-.nsvk .hint{font-size:.92rem;color:var(--mut);margin:0 0 30px;}
-.nsvk .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:0 0 30px;}
-.nsvk .box{background:var(--sand);border-radius:16px;padding:18px 20px;}
-.nsvk .box h2{font-size:1.15rem;margin-bottom:.4em;}
-.nsvk .box ul{margin:0;padding-left:18px;font-size:.96rem;color:#4a4a4a;line-height:1.6;}
-.nsvk .box ul li{margin-bottom:.3em;}
+.nsvk .hint{font-size:.92rem;color:var(--mut);margin:14px 0 0;}
 .nsvk .cta{background:var(--g);color:#fff;border-radius:18px;padding:26px 24px;text-align:center;}
 .nsvk .cta h2{color:#fff;}
 .nsvk .cta p{color:#fff;opacity:.94;margin:0 0 16px;}
@@ -30,9 +25,29 @@
 .nsvk .btn2.ghost{background:transparent;color:#fff!important;}
 .nsvk .btn2.ghost:hover{background:#fff;color:var(--g)!important;}
 .nsvk .back{display:inline-block;margin:0 0 26px;font-weight:800;color:var(--g)!important;text-decoration:none;font-size:.95rem;}
-@media(max-width:760px){.nsvk .cols{grid-template-columns:1fr;}
+
+/* ---- Zweispaltiges Layout wie beim Mölkky-Punkterechner: links das Spiel, rechts die Spielregeln ---- */
+.nsvk .wr-grid{display:grid;grid-template-columns:minmax(0,640px) minmax(260px,380px);gap:28px;align-items:start;justify-content:center;margin:0 0 30px;}
+.nsvk .wr-col-right .rules-card{position:sticky;top:20px;}
+.nsvk .rules-card{background:#fff;border-radius:14px;padding:22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.06);border:1px solid var(--sand2);}
+.nsvk .rules-card h2{font-size:1.4rem;margin:0 0 .2em;font-weight:800;}
+.nsvk .rules-card .rc-tag{font-size:1rem;color:var(--gd);font-weight:700;margin-bottom:.6em;}
+.nsvk .rules-card h3{font-size:.95rem;margin:.9em 0 .2em;font-weight:800;}
+.nsvk .rules-card p{color:#5d5d5d;margin:0 0 .6em;font-size:.95rem;}
+.nsvk .rc-facts{list-style:none;padding:0;margin:.8em 0 0;display:flex;flex-wrap:wrap;gap:8px;}
+.nsvk .rc-facts li{background:var(--sand);border-radius:10px;padding:6px 12px;font-size:.85rem;}
+.nsvk .rc-facts b{color:var(--g);margin-right:6px;}
+.nsvk .rules-card .btn-fill{display:block;width:100%;text-align:center;margin-top:16px;padding:13px 24px;border-radius:12px;
+  font-weight:800;text-decoration:none;background:var(--g);color:#fff!important;border:2px solid var(--g);}
+.nsvk .rules-card .btn-fill:hover{background:var(--gd);border-color:var(--gd);}
+@media(max-width:860px){
+  .nsvk .wr-grid{grid-template-columns:1fr;max-width:640px;margin-left:auto;margin-right:auto;}
+  .nsvk .wr-col-right .rules-card{position:static;}
+}
+@media(max-width:760px){
   #kubbApp{aspect-ratio:3/4;max-height:76vh;min-height:420px;}
-  .nsvk .btn2{width:100%;text-align:center;}}
+  .nsvk .btn2{width:100%;text-align:center;}
+}
 
 #kubbApp{--green:#477c6e;--green-dark:#3a685c;--cream:#f6f2ed;--ink:#2b2b2b;}
 #kubbApp *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -103,7 +118,11 @@
   streut auch hier jeder Wurf ein wenig.</p>
 </div>
 
-<div class="w stagewrap">
+<div class="w">
+<div class="wr-grid">
+<div class="wr-col-left">
+
+  <div class="stagewrap">
   <div id="kubbApp">
 <div id="app">
   <div id="loading">Spielfeld wird aufgebaut …</div>
@@ -153,31 +172,36 @@
   </div>
   <p class="hint">Zielen mit Maus oder Finger aufs Spielfeld &middot; loslassen wirft &middot;
   <b>&#9143; Vollbild</b> macht es gr&ouml;&szlig;er. Funktioniert am Handy genauso wie am Rechner.</p>
+  </div>
+
+</div>
+<div class="wr-col-right">
+  <div class="rules-card" id="regeln">
+    <span class="eyebrow">Spielregeln</span>
+    <h2>So wird Wikingerschach gespielt</h2>
+    <p class="rc-tag">Das schwedische Wurfspiel mit Streit um Regelvarianten seit Jahrzehnten</p>
+
+    <h3>Aufbau</h3>
+    <p>Auf jeder Grundlinie stehen <b>5 Kubbs</b> nebeneinander, in der Mitte des Felds der <b>K&ouml;nig</b>. Von der gegen&uuml;berliegenden Linie aus wirft abwechselnd jede Seite mit Wurfh&ouml;lzern auf die Kubbs der Gegenseite.</p>
+
+    <h3>Werfen &amp; Feldkubbs</h3>
+    <p>Du hast <b>6 Wurfh&ouml;lzer pro Runde</b>. Zuerst m&uuml;ssen die <b>5 Kubbs</b> auf der gegn&uuml;berliegenden Grundlinie fallen. Umgeworfene Kubbs wirft die Gegenseite danach in deine H&auml;lfte zur&uuml;ck &ndash; diese <b>Feldkubbs</b> musst du als N&auml;chstes zuerst treffen, bevor wieder die hinteren Kubbs zählen.</p>
+
+    <h3>Ziel &amp; Gewinn</h3>
+    <p>Erst wenn alle Kubbs liegen, darf der <b>K&ouml;nig</b> umgeworfen werden &ndash; dann ist die Partie gewonnen. Wer den K&ouml;nig zu fr&uuml;h trifft, hat <b>sofort verloren</b>. Hier im Browser spielst du allein gegen das Feld; gez&auml;hlt wird, mit wie wenigen W&uuml;rfen du fertig wirst.</p>
+
+    <h3>Streuung</h3>
+    <p>Wie beim echten Wurf ist auch hier kein Treffer millimetergenau: Der Zielkreis beim Zielen zeigt dir, wie breit der Wurf um den Zielpunkt streut &ndash; je weiter das Ziel weg ist, desto gr&ouml;&szlig;er die Streuung.</p>
+
+    <ul class="rc-facts"><li><b>Spieler</b>2 Teams, ab 6 Jahren</li><li><b>Feld</b>5 &times; 8 Meter</li><li><b>Wo</b>Drinnen &amp; Drau&szlig;en</li><li><b>Set</b>1 K&ouml;nig, 10 Kubbs, 6 H&ouml;lzer</li></ul>
+
+    <a class="btn-fill" href="/jetzt-buchen/">Jetzt buchen</a>
+  </div>
+</div>
+</div>
 </div>
 
 <div class="w">
-  <div class="cols">
-    <div class="box">
-      <h2>So wird gespielt</h2>
-      <ul>
-        <li>Du hast <b>6 Wurfh&ouml;lzer pro Runde</b>.</li>
-        <li>Erst die <b>5 Kubbs</b> auf der gegen&uuml;berliegenden Grundlinie umlegen.</li>
-        <li>Getroffene Kubbs kommen als <b>Feldkubbs</b> in deine H&auml;lfte zur&uuml;ck &ndash; die z&auml;hlen zuerst.</li>
-        <li>Ganz zum Schluss f&auml;llt der <b>K&ouml;nig</b>. Zu fr&uuml;h getroffen hei&szlig;t: verloren.</li>
-        <li>Gez&auml;hlt wird, mit wie wenigen W&uuml;rfen du fertig wirst.</li>
-      </ul>
-    </div>
-    <div class="box">
-      <h2>Das echte Spiel</h2>
-      <ul>
-        <li>Ein Kubb-Set hat <b>1 K&ouml;nig, 10 Kubbs, 6 Wurfh&ouml;lzer</b> und 4 Eckst&auml;be.</li>
-        <li>Das Feld ist <b>5 &times; 8 Meter</b> &ndash; passt in jeden Park und auf viele G&auml;rten.</li>
-        <li>Gespielt wird in zwei Teams, von Kindern ab ca. 6 Jahren bis Opa.</li>
-        <li>Bei uns in Frankfurt zum <b>Mieten</b> &ndash; abholen oder ins Nordend geliefert.</li>
-      </ul>
-    </div>
-  </div>
-
   <div class="cta">
     <h2>Lust auf echtes Wikingerschach?</h2>
     <p>Wir bringen das Set zum Kindergeburtstag, zur Gartenparty oder zur Firmenfeier &ndash; mit 11 weiteren Spielen.</p>
