@@ -188,7 +188,7 @@
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
 import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
 const _dbg = m => { const l=document.getElementById('loading'); if(l){ l.style.display='flex'; l.textContent=m; } };
@@ -237,10 +237,14 @@ if (S.best) el.stBest.textContent = S.best + ' Würfe';
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xcfe0e8, 22, 60);
 
-const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+// Schwächere Geräte sparsamer bedienen
+const LOW = (navigator.hardwareConcurrency||4) <= 4
+         || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+
+const renderer = new THREE.WebGLRenderer({antialias:!LOW, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, LOW?1:1.5));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = LOW ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 $('app').appendChild(renderer.domElement);
 
@@ -270,7 +274,7 @@ document.addEventListener('fullscreenchange',()=>setTimeout(resize,60));
 scene.add(new THREE.HemisphereLight(0xeaf4ff, 0x6d8a4e, 0.85));
 const sun = new THREE.DirectionalLight(0xfff2d8, 1.45);
 sun.position.set(-5,8.5,5.5); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
+sun.shadow.mapSize.set(LOW?512:1024, LOW?512:1024);
 sun.shadow.camera.left=-7.5; sun.shadow.camera.right=7.5;
 sun.shadow.camera.top=8; sun.shadow.camera.bottom=-8;
 sun.shadow.camera.near=1; sun.shadow.camera.far=26;
@@ -280,118 +284,117 @@ scene.add(new THREE.AmbientLight(0xffffff,0.2));
 
 /* ===================== Gemalte Parkkulisse ===================== */
 function panorama(){
-  const W=4096,H=1280;
+  // Leichtgewichtig: kleine Leinwand, KEIN ctx.filter (das frisst auf schwachen
+  // Geraeten Minuten und Speicher). Weichheit entsteht durch Hochskalieren
+  // der hinteren Ebenen und durch halbtransparente Kleckse.
+  const W=LOW?1024:2048, H=LOW?320:640;
   const c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d');
-  const HOR = H*0.63;                      // Horizontlinie
+  const HOR = H*0.63;
 
-  // Himmel
   const sky=x.createLinearGradient(0,0,0,HOR);
   sky.addColorStop(0,'#5d9fd6'); sky.addColorStop(.45,'#8dc0e4');
   sky.addColorStop(.82,'#cfe3ef'); sky.addColorStop(1,'#eaf1ee');
   x.fillStyle=sky; x.fillRect(0,0,W,HOR);
 
-  // Wolken (weich)
-  for(let i=0;i<26;i++){
+  // Wolken
+  for(let i=0;i<18;i++){
     const cx=Math.random()*W, cy=H*0.06+Math.random()*HOR*0.42;
-    const s=70+Math.random()*190;
-    x.save(); x.globalAlpha=0.20+Math.random()*0.35;
-    for(let b=0;b<9;b++){
-      const g=x.createRadialGradient(cx+(Math.random()-.5)*s*1.9, cy+(Math.random()-.5)*s*0.45,0,
-                                     cx+(Math.random()-.5)*s*1.9, cy+(Math.random()-.5)*s*0.45, s*0.6);
+    const s=50+Math.random()*120;
+    x.save(); x.globalAlpha=0.18+Math.random()*0.3;
+    for(let b=0;b<5;b++){
+      const ox=cx+(Math.random()-.5)*s*1.7, oy=cy+(Math.random()-.5)*s*0.4;
+      const g=x.createRadialGradient(ox,oy,0,ox,oy,s*0.62);
       g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
-      x.fillStyle=g; x.beginPath(); x.arc(cx+(Math.random()-.5)*s*1.6, cy+(Math.random()-.5)*s*0.4, s*0.62,0,7); x.fill();
+      x.fillStyle=g; x.beginPath(); x.arc(ox,oy,s*0.62,0,7); x.fill();
     }
     x.restore();
   }
 
-  // Boden unter dem Horizont
   const gr=x.createLinearGradient(0,HOR,0,H);
   gr.addColorStop(0,'#9cb77a'); gr.addColorStop(1,'#7ba158');
   x.fillStyle=gr; x.fillRect(0,HOR,W,H-HOR);
 
-  // weit entfernte Hügel / Dunst
-  x.save(); x.filter='blur(6px)';
-  for(let layer=0;layer<2;layer++){
-    const base = HOR - 10 - layer*16;
-    const col = layer===0 ? 'rgba(150,180,170,.55)' : 'rgba(120,160,150,.45)';
-    x.fillStyle=col; x.beginPath(); x.moveTo(0,base);
-    for(let px=0;px<=W;px+=40){
-      const y = base - (Math.sin(px*0.0016+layer*2.3)*26 + Math.sin(px*0.0041+layer)*16 + 26);
-      x.lineTo(px,y);
-    }
-    x.lineTo(W,HOR+4); x.lineTo(0,HOR+4); x.closePath(); x.fill();
-  }
-  x.restore();
-
-  // Baumreihen: hinten dunstig, vorne kräftig
-  function canopy(cx, baseY, h, hue, alpha, blur){
-    x.save();
-    if (blur) x.filter = `blur(${blur}px)`;
-    x.globalAlpha = alpha;
-    // Stamm
-    x.fillStyle = `hsl(28,24%,${26+Math.random()*8}%)`;
-    const tw = Math.max(3,h*0.055);
-    x.fillRect(cx-tw/2, baseY-h*0.42, tw, h*0.44);
-    // Krone: viele weiche Kleckse
-    const blobs = 10+Math.floor(Math.random()*9);
+  // Baumkrone auf einem beliebigen Kontext malen (ohne Filter)
+  function canopy(ctx, cx, baseY, h, hue, alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'hsl(28,24%,'+(26+Math.random()*8)+'%)';
+    const tw = Math.max(2,h*0.055);
+    ctx.fillRect(cx-tw/2, baseY-h*0.42, tw, h*0.44);
+    const blobs = 7+Math.floor(Math.random()*6);
     for(let i=0;i<blobs;i++){
       const a=Math.random()*Math.PI*2, r=Math.random();
       const bx = cx + Math.cos(a)*h*0.30*r*1.25;
       const by = baseY - h*0.62 + Math.sin(a)*h*0.22*r;
       const br = h*(0.14+Math.random()*0.15);
       const light = 24 + Math.random()*20 + (by < baseY-h*0.7 ? 8 : 0);
-      x.fillStyle = `hsl(${hue+Math.random()*16-8},${34+Math.random()*20}%,${light}%)`;
-      x.beginPath(); x.arc(bx,by,br,0,7); x.fill();
+      ctx.fillStyle = 'hsl('+(hue+Math.random()*16-8)+','+(34+Math.random()*20)+'%,'+light+'%)';
+      ctx.beginPath(); ctx.arc(bx,by,br,0,7); ctx.fill();
     }
-    // Sonnenlicht oben drauf
-    x.globalAlpha = alpha*0.5;
-    for(let i=0;i<5;i++){
+    ctx.globalAlpha = alpha*0.5;
+    for(let i=0;i<3;i++){
       const bx = cx + (Math.random()-.4)*h*0.3, by = baseY - h*0.82 + (Math.random()-.5)*h*0.12;
-      x.fillStyle = `hsl(${hue+10},46%,${50+Math.random()*12}%)`;
-      x.beginPath(); x.arc(bx,by,h*(0.08+Math.random()*0.09),0,7); x.fill();
+      ctx.fillStyle = 'hsl('+(hue+10)+',46%,'+(50+Math.random()*12)+'%)';
+      ctx.beginPath(); ctx.arc(bx,by,h*(0.08+Math.random()*0.09),0,7); ctx.fill();
     }
-    x.restore();
+    ctx.restore();
   }
-  // hintere Reihe (dunstig)
-  for(let i=0;i<150;i++) canopy(Math.random()*W, HOR+6, 90+Math.random()*80, 96+Math.random()*22, 0.55, 4);
-  // mittlere Reihe
-  for(let i=0;i<110;i++) canopy(Math.random()*W, HOR+16, 140+Math.random()*120, 100+Math.random()*24, 0.82, 1.5);
-  // vordere Reihe (kräftig)
-  for(let i=0;i<70;i++) canopy(Math.random()*W, HOR+30, 200+Math.random()*170, 95+Math.random()*26, 1, 0);
 
-  // Büsche / Saum
+  // Hintere Reihe: auf kleiner Leinwand malen und hochziehen -> weich, fast gratis
+  const fw=W/4, fh=Math.round(H*0.42);
+  const far=document.createElement('canvas'); far.width=fw; far.height=fh;
+  const fx=far.getContext('2d');
+  const fBase=fh*0.88;
+  // Huegelsaum
+  fx.fillStyle='rgba(140,172,162,.75)';
+  fx.beginPath(); fx.moveTo(0,fBase);
+  for(let px=0;px<=fw;px+=10){
+    fx.lineTo(px, fBase-(Math.sin(px*0.0065)*9+Math.sin(px*0.016)*6+10));
+  }
+  fx.lineTo(fw,fh); fx.lineTo(0,fh); fx.closePath(); fx.fill();
+  for(let i=0;i<70;i++) canopy(fx, Math.random()*fw, fBase+2, 26+Math.random()*22, 96+Math.random()*22, 0.72);
+  x.save(); x.globalAlpha=0.9;
+  x.drawImage(far, 0, HOR-fh*(W/fw)*0.0 - (fh*2.2) + 8, W, fh*2.2);
+  x.restore();
+
+  // mittlere Reihe
+  for(let i=0;i<70;i++) canopy(x, Math.random()*W, HOR+10, 80+Math.random()*60, 100+Math.random()*24, 0.85);
+  // vordere Reihe
+  for(let i=0;i<48;i++) canopy(x, Math.random()*W, HOR+20, 110+Math.random()*90, 95+Math.random()*26, 1);
+
+  // Buesche
   x.save();
-  for(let i=0;i<260;i++){
-    const bx=Math.random()*W, by=HOR+26+Math.random()*40, r=16+Math.random()*34;
-    x.fillStyle=`hsl(${96+Math.random()*22},${30+Math.random()*18}%,${24+Math.random()*16}%)`;
+  for(let i=0;i<140;i++){
+    const bx=Math.random()*W, by=HOR+16+Math.random()*24, r=9+Math.random()*18;
+    x.fillStyle='hsl('+(96+Math.random()*22)+','+(30+Math.random()*18)+'%,'+(24+Math.random()*16)+'%)';
     x.globalAlpha=0.9; x.beginPath(); x.arc(bx,by,r,0,7); x.fill();
   }
   x.restore();
 
-  // Dunstschleier am Horizont
-  const haze=x.createLinearGradient(0,HOR-70,0,HOR+70);
-  haze.addColorStop(0,'rgba(226,238,240,0)'); haze.addColorStop(.5,'rgba(226,238,240,.55)');
+  // Dunstschleier
+  const haze=x.createLinearGradient(0,HOR-40,0,HOR+40);
+  haze.addColorStop(0,'rgba(226,238,240,0)'); haze.addColorStop(.5,'rgba(226,238,240,.5)');
   haze.addColorStop(1,'rgba(226,238,240,0)');
-  x.fillStyle=haze; x.fillRect(0,HOR-70,W,140);
+  x.fillStyle=haze; x.fillRect(0,HOR-40,W,80);
 
   const t=new THREE.CanvasTexture(c);
   t.colorSpace=THREE.SRGBColorSpace;
   t.wrapS=THREE.RepeatWrapping;
-  t.anisotropy=8;
+  t.anisotropy=4;
   return t;
 }
-(function skyDome(){
-  const geo = new THREE.SphereGeometry(80, 48, 32);
+function skyDome(){
+  const geo = new THREE.SphereGeometry(80, 32, 20);
   const mat = new THREE.MeshBasicMaterial({map:panorama(), side:THREE.BackSide, fog:false, depthWrite:false});
   const m = new THREE.Mesh(geo, mat);
   m.position.y = 14;         // Horizont der Textur auf Augenhöhe schieben
   scene.add(m);
-})();
+}
 
 /* ===================== Rasen ===================== */
 function grassTexture(){
-  const s=1024,c=document.createElement('canvas'); c.width=c.height=s;
+  const s=LOW?256:512,c=document.createElement('canvas'); c.width=c.height=s;
   const x=c.getContext('2d');
   x.fillStyle='#78a053'; x.fillRect(0,0,s,s);
   for(let i=0;i<60;i++){
@@ -401,7 +404,7 @@ function grassTexture(){
     g.addColorStop(1,'rgba(0,0,0,0)');
     x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,7);x.fill();
   }
-  for(let i=0;i<26000;i++){
+  for(let i=0;i<(LOW?3000:7000);i++){
     const px=Math.random()*s,py=Math.random()*s;
     x.strokeStyle=`hsla(${82+Math.random()*28},${30+Math.random()*26}%,${22+Math.random()*30}%,${.18+Math.random()*.4})`;
     x.lineWidth=0.8+Math.random()*1.1;
@@ -409,7 +412,7 @@ function grassTexture(){
   }
   const t=new THREE.CanvasTexture(c);
   t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(16,16);
-  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8;
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
   return t;
 }
 function stripeTexture(){
@@ -995,9 +998,21 @@ function tick(now){
   renderer.render(scene,camera);
 }
 
+/* Start: erst den Ladehinweis zeichnen lassen, dann die schwere Kulisse bauen.
+   So bleibt die Seite bedienbar, auch wenn ein Gerät länger braucht. */
+function boot(){
+  try{
+    skyDome();
+    resize();
+    layout();
+    S.phase='idle';
+    el.loading.style.display='none';
+    requestAnimationFrame(tick);
+  }catch(err){
+    _dbg('Das Spiel konnte auf diesem Gerät nicht geladen werden. Bitte die Seite neu laden.');
+    console.error(err);
+  }
+}
 resize();
-layout();
-S.phase='idle';
-el.loading.style.display='none';
-requestAnimationFrame(tick);
+requestAnimationFrame(()=>setTimeout(boot,30));
 </script>
