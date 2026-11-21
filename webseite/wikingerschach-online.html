@@ -51,6 +51,9 @@
     text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.10);}
 #kubbApp .btn:hover{background:#fff;}
 #kubbApp .btn.on{background:var(--green);color:#fff;}
+#kubbApp #app.topview #hudLeft, #kubbApp #app.topview #tip, #kubbApp #app.topview #sticks, #kubbApp #app.topview #coach{
+    opacity:0;pointer-events:none;transition:opacity .2s;}
+#kubbApp #hudLeft, #kubbApp #tip, #kubbApp #sticks{transition:opacity .2s;}
 #kubbApp #sticks{position:absolute;bottom:14px;left:12px;display:flex;gap:4px;z-index:5;pointer-events:none;}
 #kubbApp .stick{width:7px;height:26px;border-radius:3px;background:#e2c49b;border:1.5px solid rgba(0,0,0,.18);
     box-shadow:0 2px 5px rgba(0,0,0,.18);}
@@ -251,7 +254,7 @@ $('app').appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(50,1,0.1,200);
 const CAM_HOME = new THREE.Vector3(0,1.58,NEAR_Z+1.0);
 const CAM_LOOK = new THREE.Vector3(0,0.22,FAR_Z+0.4);
-const CAM_TOP  = new THREE.Vector3(0,9.6,0.8);
+const CAM_TOP  = new THREE.Vector3(0,11.4,1.2);
 camera.position.copy(CAM_HOME);
 const camTarget = CAM_LOOK.clone(), camDesired = CAM_HOME.clone(), lookDesired = CAM_LOOK.clone();
 camera.lookAt(camTarget);
@@ -284,106 +287,76 @@ scene.add(new THREE.AmbientLight(0xffffff,0.2));
 
 /* ===================== Gemalte Parkkulisse ===================== */
 function panorama(){
-  // Leichtgewichtig: kleine Leinwand, KEIN ctx.filter (das frisst auf schwachen
-  // Geraeten Minuten und Speicher). Weichheit entsteht durch Hochskalieren
-  // der hinteren Ebenen und durch halbtransparente Kleckse.
-  const W=LOW?1024:2048, H=LOW?320:640;
+  // Ruhige, einfarbige Szenerie: Himmelsverlauf, weicher Dunst, Wiesenband.
+  // Keine gemalten Baeume mehr - klarer Blick aufs Spielfeld.
+  const W=1024,H=512;
   const c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d');
-  const HOR = H*0.63;
+  const HOR=H*0.63;
 
   const sky=x.createLinearGradient(0,0,0,HOR);
-  sky.addColorStop(0,'#5d9fd6'); sky.addColorStop(.45,'#8dc0e4');
-  sky.addColorStop(.82,'#cfe3ef'); sky.addColorStop(1,'#eaf1ee');
+  sky.addColorStop(0,'#5f9fd2'); sky.addColorStop(.5,'#9cc6e2');
+  sky.addColorStop(.85,'#d7e7ee'); sky.addColorStop(1,'#eef3ef');
   x.fillStyle=sky; x.fillRect(0,0,W,HOR);
 
-  // Wolken
-  for(let i=0;i<18;i++){
-    const cx=Math.random()*W, cy=H*0.06+Math.random()*HOR*0.42;
-    const s=50+Math.random()*120;
-    x.save(); x.globalAlpha=0.18+Math.random()*0.3;
-    for(let b=0;b<5;b++){
-      const ox=cx+(Math.random()-.5)*s*1.7, oy=cy+(Math.random()-.5)*s*0.4;
-      const g=x.createRadialGradient(ox,oy,0,ox,oy,s*0.62);
-      g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
-      x.fillStyle=g; x.beginPath(); x.arc(ox,oy,s*0.62,0,7); x.fill();
-    }
-    x.restore();
-  }
-
   const gr=x.createLinearGradient(0,HOR,0,H);
-  gr.addColorStop(0,'#9cb77a'); gr.addColorStop(1,'#7ba158');
+  gr.addColorStop(0,'#8fae78'); gr.addColorStop(.35,'#86a76f'); gr.addColorStop(1,'#7ba158');
   x.fillStyle=gr; x.fillRect(0,HOR,W,H-HOR);
 
-  // Baumkrone auf einem beliebigen Kontext malen (ohne Filter)
-  function canopy(ctx, cx, baseY, h, hue, alpha){
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = 'hsl(28,24%,'+(26+Math.random()*8)+'%)';
-    const tw = Math.max(2,h*0.055);
-    ctx.fillRect(cx-tw/2, baseY-h*0.42, tw, h*0.44);
-    const blobs = 7+Math.floor(Math.random()*6);
-    for(let i=0;i<blobs;i++){
-      const a=Math.random()*Math.PI*2, r=Math.random();
-      const bx = cx + Math.cos(a)*h*0.30*r*1.25;
-      const by = baseY - h*0.62 + Math.sin(a)*h*0.22*r;
-      const br = h*(0.14+Math.random()*0.15);
-      const light = 24 + Math.random()*20 + (by < baseY-h*0.7 ? 8 : 0);
-      ctx.fillStyle = 'hsl('+(hue+Math.random()*16-8)+','+(34+Math.random()*20)+'%,'+light+'%)';
-      ctx.beginPath(); ctx.arc(bx,by,br,0,7); ctx.fill();
-    }
-    ctx.globalAlpha = alpha*0.5;
-    for(let i=0;i<3;i++){
-      const bx = cx + (Math.random()-.4)*h*0.3, by = baseY - h*0.82 + (Math.random()-.5)*h*0.12;
-      ctx.fillStyle = 'hsl('+(hue+10)+',46%,'+(50+Math.random()*12)+'%)';
-      ctx.beginPath(); ctx.arc(bx,by,h*(0.08+Math.random()*0.09),0,7); ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Hintere Reihe: auf kleiner Leinwand malen und hochziehen -> weich, fast gratis
-  const fw=W/4, fh=Math.round(H*0.42);
-  const far=document.createElement('canvas'); far.width=fw; far.height=fh;
-  const fx=far.getContext('2d');
-  const fBase=fh*0.88;
-  // Huegelsaum
-  fx.fillStyle='rgba(140,172,162,.75)';
-  fx.beginPath(); fx.moveTo(0,fBase);
-  for(let px=0;px<=fw;px+=10){
-    fx.lineTo(px, fBase-(Math.sin(px*0.0065)*9+Math.sin(px*0.016)*6+10));
-  }
-  fx.lineTo(fw,fh); fx.lineTo(0,fh); fx.closePath(); fx.fill();
-  for(let i=0;i<70;i++) canopy(fx, Math.random()*fw, fBase+2, 26+Math.random()*22, 96+Math.random()*22, 0.72);
-  x.save(); x.globalAlpha=0.9;
-  x.drawImage(far, 0, HOR-fh*(W/fw)*0.0 - (fh*2.2) + 8, W, fh*2.2);
-  x.restore();
-
-  // mittlere Reihe
-  for(let i=0;i<70;i++) canopy(x, Math.random()*W, HOR+10, 80+Math.random()*60, 100+Math.random()*24, 0.85);
-  // vordere Reihe
-  for(let i=0;i<48;i++) canopy(x, Math.random()*W, HOR+20, 110+Math.random()*90, 95+Math.random()*26, 1);
-
-  // Buesche
-  x.save();
-  for(let i=0;i<140;i++){
-    const bx=Math.random()*W, by=HOR+16+Math.random()*24, r=9+Math.random()*18;
-    x.fillStyle='hsl('+(96+Math.random()*22)+','+(30+Math.random()*18)+'%,'+(24+Math.random()*16)+'%)';
-    x.globalAlpha=0.9; x.beginPath(); x.arc(bx,by,r,0,7); x.fill();
-  }
-  x.restore();
+  // dezente Heckenlinie am Horizont, nur als ruhiges Band
+  const hedge=x.createLinearGradient(0,HOR-16,0,HOR+6);
+  hedge.addColorStop(0,'rgba(104,138,112,0)');
+  hedge.addColorStop(.55,'rgba(94,128,104,.75)');
+  hedge.addColorStop(1,'rgba(110,142,110,.35)');
+  x.fillStyle=hedge; x.fillRect(0,HOR-16,W,22);
 
   // Dunstschleier
-  const haze=x.createLinearGradient(0,HOR-40,0,HOR+40);
-  haze.addColorStop(0,'rgba(226,238,240,0)'); haze.addColorStop(.5,'rgba(226,238,240,.5)');
-  haze.addColorStop(1,'rgba(226,238,240,0)');
-  x.fillStyle=haze; x.fillRect(0,HOR-40,W,80);
+  const haze=x.createLinearGradient(0,HOR-34,0,HOR+26);
+  haze.addColorStop(0,'rgba(232,241,242,0)');
+  haze.addColorStop(.5,'rgba(232,241,242,.5)');
+  haze.addColorStop(1,'rgba(232,241,242,0)');
+  x.fillStyle=haze; x.fillRect(0,HOR-34,W,60);
 
   const t=new THREE.CanvasTexture(c);
   t.colorSpace=THREE.SRGBColorSpace;
   t.wrapS=THREE.RepeatWrapping;
-  t.anisotropy=4;
+  t.anisotropy=2;
   return t;
 }
+
+/* Banden-Schild hinter der gegnerischen Grundlinie - Marke statt Baumreihe */
+function bannerTexture(){
+  const W=1024,H=256;
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  x.fillStyle='#477c6e'; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.07)'; x.fillRect(0,0,W,H*0.42);
+  x.fillStyle='#f6f2ed';
+  x.textAlign='center'; x.textBaseline='middle';
+  x.font='900 86px Nunito, system-ui, sans-serif';
+  x.fillText('NORDEND', W/2, H*0.38);
+  x.font='700 46px Nunito, system-ui, sans-serif';
+  x.letterSpacing='10px';
+  x.fillText('SPIELEVERLEIH', W/2, H*0.70);
+  x.strokeStyle='rgba(246,242,237,.45)'; x.lineWidth=5;
+  x.strokeRect(18,18,W-36,H-36);
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+function banner(){
+  const g=new THREE.PlaneGeometry(7.2,1.0);
+  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:bannerTexture()}));
+  m.position.set(0,0.5,FAR_Z-2.6);
+  scene.add(m);
+  // Pfosten
+  const pm=new THREE.MeshLambertMaterial({color:0x8c7a63});
+  [-3.5,3.5].forEach(px=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,1.1,8),pm);
+    p.position.set(px,0.55,FAR_Z-2.62); scene.add(p);
+  });
+}
+
 function skyDome(){
   const geo = new THREE.SphereGeometry(80, 32, 20);
   const mat = new THREE.MeshBasicMaterial({map:panorama(), side:THREE.BackSide, fog:false, depthWrite:false});
@@ -594,11 +567,17 @@ const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),-0.08);
 let aiming=false;
 const target=new THREE.Vector3(0,0.08,FAR_Z);
 
+const IS_TOUCH = (navigator.maxTouchPoints||0)>0 || 'ontouchstart' in window;
+const TOUCH_LIFT = 0.17;   // Anteil der Spielfeldhoehe, um den der Zielkreis ueber dem Finger sitzt
 function updateTargetFromEvent(e){
   const r=renderer.domElement.getBoundingClientRect();
   const s=e.touches&&e.touches[0]?e.touches[0]:e;
+  const isTouch = !!(e.touches&&e.touches[0]) || e.pointerType==='touch';
+  // Der Finger verdeckt sonst genau die Stelle, auf die man zielt:
+  // Zielkreis sitzt deshalb ein Stueck ueber der Fingerkuppe.
+  const lift = isTouch ? Math.min(150, r.height*TOUCH_LIFT) : 0;
   ndc.x=((s.clientX-r.left)/r.width)*2-1;
-  ndc.y=-((s.clientY-r.top)/r.height)*2+1;
+  ndc.y=-(((s.clientY-lift)-r.top)/r.height)*2+1;
   ray.setFromCamera(ndc,camera);
   const hit=new THREE.Vector3();
   if (!ray.ray.intersectPlane(groundPlane,hit)) return false;
@@ -635,6 +614,11 @@ function onDown(e){
   if (S.phase!=='aiming') return;
   e.preventDefault();
   aiming=true;
+  if (e.touches&&e.touches[0]){
+    coach('touch','Zielen am Handy',
+      'Damit dein Finger die Klötze nicht verdeckt, sitzt der Zielkreis ein Stück <b>über</b> der Fingerkuppe. '+
+      'Finger verschieben = zielen, loslassen = Wurf.',12);
+  }
   if (updateTargetFromEvent(e)) refreshAimVisuals();
 }
 function onMove(e){
@@ -847,7 +831,7 @@ function endRound(){
       S.roundEnding=false;
       S.phase='aiming';
       const c=counts();
-      tip(c.fieldStanding?'Feldkubbs zuerst umlegen!':'Zielen: Maus/Finger aufs Feld · Loslassen zum Werfen');
+      tip(c.fieldStanding?'Feldkubbs zuerst umlegen!':(IS_TOUCH?'Finger aufs Feld – der Zielkreis sitzt über dem Finger · loslassen wirft':'Zielen: Maus aufs Feld · Loslassen zum Werfen'));
       if(c.fieldStanding){
         coach('field','Feldkubbs!',
           'Deine Treffer hat der Gegner als <b>Feldkubbs</b> in deine Hälfte geworfen (hellere Klötze). '+
@@ -921,13 +905,15 @@ function layout(){
   S.throws=0; S.batonsLeft=BATONS_PER_ROUND; S.phase='aiming'; S.roundEnding=false;
   coachSeen.clear(); coachHide();
   tip(S.mode==='practice'?'Übungsmodus – keine Feldkubbs, König ungefährlich'
-                         :'Zielen: Maus/Finger aufs Feld · Loslassen zum Werfen');
+                         :(IS_TOUCH?'Finger aufs Feld – der Zielkreis sitzt über dem Finger · loslassen wirft':'Zielen: Maus aufs Feld · Loslassen zum Werfen'));
   syncHUD();
 }
 
 /* ===================== Buttons ===================== */
 el.btnView.onclick=()=>{S.topView=!S.topView;el.btnView.classList.toggle('on',S.topView);
-  el.btnView.textContent=S.topView?'Wurfsicht':'Draufsicht';};
+  el.btnView.textContent=S.topView?'Wurfsicht':'Draufsicht';
+  $('app').classList.toggle('topview',S.topView);
+  if(S.topView) coachHide();};
 el.btnPractice.onclick=()=>{S.mode=S.mode==='practice'?'game':'practice';
   el.btnPractice.classList.toggle('on',S.mode==='practice');layout();};
 el.btnSound.onclick=()=>{S.sound=!S.sound;el.btnSound.classList.toggle('on',S.sound);
@@ -1003,6 +989,7 @@ function tick(now){
 function boot(){
   try{
     skyDome();
+    banner();
     resize();
     layout();
     S.phase='idle';
