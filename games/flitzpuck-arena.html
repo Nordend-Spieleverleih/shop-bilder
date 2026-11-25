@@ -34,7 +34,7 @@
   }
   .wrap{max-width:940px;margin:0 auto;}
 
-  header{margin-bottom:14px;}
+  .page-head{margin-bottom:14px;}
   .eyebrow{
     font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
     color:var(--green-dark);margin:0 0 2px;
@@ -151,7 +151,22 @@
   .rules li::marker{color:var(--green);font-weight:800;}
   .cta p{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--ink-soft);}
   .cta a{display:inline-block;text-decoration:none;}
-  footer{margin-top:20px;font-size:12px;color:#938c83;text-align:center;}
+  .page-foot{margin-top:20px;font-size:12px;color:#938c83;text-align:center;}
+
+  /* on a phone the strip must not push the board off the first screen */
+  @media (max-width:430px){
+    body{padding:14px 12px 30px;}
+    .hud{gap:6px;}
+    .spacer{display:none;}
+    .stat{padding:5px 11px;gap:6px;}
+    .stat .k{font-size:10.5px;}
+    .stat .v{font-size:16px;}
+    .switch{padding:4px 12px 4px 9px;gap:7px;}
+    .switch .switch-label{font-size:10.5px;}
+    .btn{font-size:13.5px;padding:8px 14px;}
+    h1{font-size:22px;}
+    .tagline{font-size:13.5px;}
+  }
 
   @media (prefers-reduced-motion:reduce){ *{transition-duration:.01ms !important;} }
 </style>
@@ -159,11 +174,11 @@
 <body>
 <div class="wrap">
 
-  <header>
+  <div class="page-head">
     <p class="eyebrow">Nordend-Spieleverleih &middot; Spiel zum Antesten</p>
     <h1>Flitzpuck Arena</h1>
     <p class="tagline">Duell gegen den Computer: Wer zuerst die eigene H&auml;lfte leer hat, gewinnt. Du spielst unten mit den dunklen Pucks, der Gegner oben mit den hellen &mdash; und schie&szlig;t gleichzeitig zur&uuml;ck.</p>
-  </header>
+  </div>
 
   <div class="hud">
     <div class="stat" id="statMe"><span class="dot mine"></span><span class="k">Deine Seite</span><span class="v" id="sMe">4</span></div>
@@ -214,7 +229,7 @@
     </div>
   </div>
 
-  <footer>Ein kleines Browserspiel von nordend-spieleverleih.de</footer>
+  <div class="page-foot">Ein kleines Browserspiel von nordend-spieleverleih.de</div>
 </div>
 
 <script>
