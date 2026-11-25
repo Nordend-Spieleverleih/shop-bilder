@@ -81,28 +81,25 @@
   }
   canvas{display:block;width:100%;height:auto;touch-action:none;}
 
-  .switch{
-    display:flex;align-items:center;gap:9px;
-    background:#fff;border:1.5px solid var(--chip);border-radius:999px;
-    padding:5px 15px 5px 11px;cursor:pointer;user-select:none;
-  }
-  .switch input{position:absolute;opacity:0;width:0;height:0;}
-  .switch .track{
-    position:relative;width:38px;height:21px;border-radius:999px;
-    background:#d9d3c9;transition:background .18s ease;flex:0 0 auto;
-  }
-  .switch .knob{
-    position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease;
-  }
-  .switch input:checked + .track{background:var(--green);}
-  .switch input:checked + .track .knob{transform:translateX(17px);}
-  .switch input:focus-visible + .track{outline:3px solid var(--green-light);outline-offset:2px;}
-  .switch .switch-label{
+  /* two independent dials: how sharp the opponent plays, how wide the tunnel is */
+  .tuner{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;}
+  .tune{display:flex;align-items:center;gap:9px;}
+  .tune-k{
     font-size:11.5px;font-weight:800;letter-spacing:.06em;
     text-transform:uppercase;color:var(--ink-soft);
   }
-  .switch input:checked ~ .switch-label{color:var(--green-dark);}
+  .seg{
+    display:flex;background:#fff;border:1.5px solid var(--chip);
+    border-radius:999px;padding:3px;gap:2px;
+  }
+  .seg button{
+    font-family:inherit;font-size:12.5px;font-weight:800;color:var(--ink-soft);
+    background:transparent;border-radius:999px;padding:5px 13px;
+    transition:background .15s ease,color .15s ease;
+  }
+  .seg button:hover{color:var(--ink);}
+  .seg button.on{background:var(--green);color:#fff;}
+  .seg button:focus-visible{outline:3px solid var(--green-light);outline-offset:2px;}
 
   .coach{
     position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
@@ -161,8 +158,10 @@
     .stat{padding:5px 11px;gap:6px;}
     .stat .k{font-size:10.5px;}
     .stat .v{font-size:16px;}
-    .switch{padding:4px 12px 4px 9px;gap:7px;}
-    .switch .switch-label{font-size:10.5px;}
+    .tuner{gap:7px;margin-bottom:10px;}
+    .tune{gap:7px;}
+    .tune-k{font-size:10.5px;}
+    .seg button{font-size:11.5px;padding:5px 10px;}
     .btn{font-size:13.5px;padding:8px 14px;}
     h1{font-size:22px;}
     .tagline{font-size:13.5px;}
@@ -185,12 +184,26 @@
     <div class="stat" id="statAi"><span class="dot theirs"></span><span class="k">Gegner</span><span class="v" id="sAi">4</span></div>
     <div class="stat clock" id="statClock"><span class="k">Zeit</span><span class="v" id="sTime">1:40</span></div>
     <div class="spacer"></div>
-    <label class="switch" title="Schmalerer Tunnel, treffsicherer Gegner">
-      <input type="checkbox" id="diffToggle">
-      <span class="track"><span class="knob"></span></span>
-      <span class="switch-label">Schwer</span>
-    </label>
     <button class="btn btn-ghost" id="btnReset">Neue Runde</button>
+  </div>
+
+  <div class="tuner">
+    <div class="tune">
+      <span class="tune-k">Gegner</span>
+      <div class="seg" id="segAi" role="group" aria-label="St&auml;rke des Gegners">
+        <button type="button" data-v="0">Locker</button>
+        <button type="button" data-v="1" class="on">Normal</button>
+        <button type="button" data-v="2">Stark</button>
+      </div>
+    </div>
+    <div class="tune">
+      <span class="tune-k">Tunnel</span>
+      <div class="seg" id="segGap" role="group" aria-label="Breite der &Ouml;ffnung">
+        <button type="button" data-v="0">Breit</button>
+        <button type="button" data-v="1" class="on">Normal</button>
+        <button type="button" data-v="2">Schmal</button>
+      </div>
+    </div>
   </div>
 
   <div class="board-shell">
@@ -219,7 +232,7 @@
         <li>Mit Maus oder Finger nach unten ziehen &mdash; weiter ziehen hei&szlig;t mehr Wucht, nach links oder rechts ziehen &auml;ndert den Winkel. Loslassen schie&szlig;t.</li>
         <li>Der Puck muss durch den Tunnel in der Mittelwand. Was auf deiner Seite landet, musst du schie&szlig;en &mdash; auch die hellen Pucks des Gegners.</li>
         <li>Leere H&auml;lfte gewinnt. L&auml;uft die Zeit ab, gewinnt wer weniger Pucks auf seiner Seite hat.</li>
-        <li>Zu leicht? Schalter <b>Schwer</b> umlegen: der Tunnel wird deutlich schmaler und der Gegner zielt genauer.</li>
+        <li>Zu leicht oder zu schwer? <b>Gegner</b> und <b>Tunnel</b> lassen sich oben getrennt einstellen &mdash; der Gegner wirkt sofort, eine neue Tunnelbreite startet eine frische Runde.</li>
       </ol>
     </div>
     <div class="cta">
@@ -256,9 +269,9 @@
   var CX = Math.round(W / 2), CY = Math.round(H / 2);
   var WALL_HALF = 16;                        // thick wall: the opening is a tunnel through it
   var WALL = { left: CX - WALL_HALF, right: CX + WALL_HALF };
-  var GAP_EASY = 54, GAP_HARD = 31;          // half-width of the tunnel per difficulty
-  var hardMode = false;
-  var GAP_HALF = GAP_EASY;
+  var GAP_LEVELS = [68, 54, 33];             // half-width of the tunnel: breit / normal / schmal
+  var gapLevel = 1;
+  var GAP_HALF = GAP_LEVELS[gapLevel];
   var GAP = { top: CY - GAP_HALF, bottom: CY + GAP_HALF };
   var R = 19;
   var MY_BAND = PL.x0 + 128;                 // your band, strung between the rails
@@ -280,16 +293,27 @@
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var ai = { phase: 'wait', t: 0, dur: 1.1, pull: 0, pullTo: 0, aimY: CY };
-  var AIM_SPREAD = 50;                       // how far the opponent's aim wanders off centre
-  var AI_PAUSE = 0.6;                        // extra breather between its shots
+  // the opponent: spread is how far its aim wanders off centre, pause the breather
+  // between shots — locker misses often and takes its time, stark barely does
+  var AI_LEVELS = [
+    { spread: 58, pause: 0.55, rand: 1.15 },
+    { spread: 38, pause: 0.40, rand: 0.85 },
+    { spread: 20, pause: 0.22, rand: 0.50 }
+  ];
+  var aiLevel = 1;
+  var AIM_SPREAD = AI_LEVELS[aiLevel].spread;
+  var AI_PAUSE = AI_LEVELS[aiLevel].pause;
+  var AI_PAUSE_RAND = AI_LEVELS[aiLevel].rand;
 
-  // hard mode: the tunnel narrows and the opponent aims straighter and reloads quicker
-  function applyDifficulty(){
-    GAP_HALF = hardMode ? GAP_HARD : GAP_EASY;
+  function applyAi(){                        // takes effect on the opponent's next shot
+    var L = AI_LEVELS[aiLevel];
+    AIM_SPREAD = L.spread; AI_PAUSE = L.pause; AI_PAUSE_RAND = L.rand;
+  }
+
+  function applyGap(){                       // changes the board, so it needs a redraw
+    GAP_HALF = GAP_LEVELS[gapLevel];
     GAP.top = CY - GAP_HALF;
     GAP.bottom = CY + GAP_HALF;
-    AIM_SPREAD = hardMode ? 21 : 50;
-    AI_PAUSE = hardMode ? 0.35 : 0.6;
     buildBoardLayer();
   }
 
@@ -576,7 +600,7 @@
         r.vx = ux * speed; r.vy = uy * speed;
         op.loaded = null; ai.pull = 0;
         ai.phase = 'wait'; ai.t = 0;
-        ai.dur = 0.2 + Math.random() * AI_PAUSE;
+        ai.dur = AI_PAUSE + Math.random() * AI_PAUSE_RAND;
       }
     }
   }
@@ -977,11 +1001,53 @@
   document.getElementById('btnReset').addEventListener('click', reset);
   document.getElementById('btnAgain').addEventListener('click', reset);
 
-  document.getElementById('diffToggle').addEventListener('change', function(){
-    hardMode = this.checked;
-    applyDifficulty();
+  // ---- the two dials --------------------------------------------------
+  var AI_NAMES = ['Locker', 'Normal', 'Stark'];
+  var GAP_NAMES = ['Breit', 'Normal', 'Schmal'];
+
+  function markSeg(id, value){
+    var btns = document.getElementById(id).querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++){
+      var on = parseInt(btns[i].getAttribute('data-v'), 10) === value;
+      btns[i].classList.toggle('on', on);
+      btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function wireSeg(id, pick){
+    document.getElementById(id).addEventListener('click', function(e){
+      var b = e.target;
+      while (b && b !== this && !b.getAttribute('data-v')) b = b.parentNode;
+      if (!b || b === this) return;
+      var v = parseInt(b.getAttribute('data-v'), 10);
+      markSeg(id, v);
+      pick(v);
+    });
+  }
+
+  function savePrefs(){
+    try { localStorage.setItem('flitzpuck.levels', aiLevel + ',' + gapLevel); } catch (err){}
+  }
+
+  function loadPrefs(){
+    try {
+      var s = localStorage.getItem('flitzpuck.levels');
+      if (!s) return;
+      var p = s.split(','), a = parseInt(p[0], 10), g = parseInt(p[1], 10);
+      if (a >= 0 && a <= 2) aiLevel = a;
+      if (g >= 0 && g <= 2) gapLevel = g;
+    } catch (err){}
+  }
+
+  wireSeg('segAi', function(v){
+    aiLevel = v; applyAi(); savePrefs();
+    flash('Gegner: ' + AI_NAMES[v], v === 2 ? 'bad' : 'good');
+  });
+
+  wireSeg('segGap', function(v){
+    gapLevel = v; applyGap(); savePrefs();
     reset();                                 // a tunnel that changes mid-round would be unfair
-    flash(hardMode ? 'Schwer: schmaler Tunnel' : 'Normal: breiter Tunnel', hardMode ? 'bad' : 'good');
+    flash('Tunnel: ' + GAP_NAMES[v], v === 2 ? 'bad' : 'good');
   });
 
   // ---- hud / end ------------------------------------------------------
@@ -1072,8 +1138,11 @@
     requestAnimationFrame(frame);
   }
 
-  hardMode = document.getElementById('diffToggle').checked;   // browsers restore checkboxes on reload
-  applyDifficulty();
+  loadPrefs();
+  markSeg('segAi', aiLevel);
+  markSeg('segGap', gapLevel);
+  applyAi();
+  applyGap();
   reset();
   requestAnimationFrame(frame);
 })();
